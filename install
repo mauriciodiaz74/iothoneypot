@@ -1,0 +1,165 @@
+#!/bin/bash
+
+#export repository="/tmp/backups"
+#export user=`whoami`
+
+FILE=`dirname $0`/WARNING
+TOP_MARGIN=80
+RIGHT_MARGIN=40
+SCREEN_WIDTH=$(xwininfo -root | sed -n 's/.*Width: //p')
+SCREEN_HEIGHT=$(xwininfo -root | sed -n 's/.*Height: //p')
+W=$(( $SCREEN_WIDTH / 2 - $RIGHT_MARGIN ))
+H=$(( $SCREEN_HEIGHT - 2 * $TOP_MARGIN ))
+
+clear
+
+check_sudo()
+{
+	if (( $EUID != 0 )); then
+		echo
+		echo "WARNING:"
+		echo "To use this script, you need to run it as sudo"
+		echo "Please use: <sudo ./install>"
+		echo
+		exit
+	fi
+}
+
+activate_ssh()
+{
+	systemctl enable ssh
+	systemctl start ssh
+}
+
+modify_ssh_port()
+{
+	NEW_PORT=$(zenity --scale --text="Please select the new SSH port" --min-value=1000 --max-value=65535 --value=1000 --step=1)
+	sed -i 's/#Port/Port/g' /etc/ssh/sshd_config
+	sed -i "s/Port.*/Port $NEW_PORT/g" /etc/ssh/sshd_config
+	service ssh restart
+	ss -tlpn | grep ssh | (zenity --text-info --title="SSH port confirmation" --width 1000
+		if [ "$?" = 1 ]
+			then modify_ssh_port
+		fi
+	)	
+}
+
+update_upgrade()
+{
+	(
+		echo "10"; sleep 1
+		sudo apt-get update
+		echo "30"; sleep 1
+		echo "60"; sleep 1
+		echo "90";
+		sudo apt-get -y upgrade
+	) |
+	(
+		zenity 	--progress \
+       			--width=20 \
+       			--height=50 \
+       			--title="Updating" \
+       			--text="Updating and upgrading system..." \
+       			--percentage=0
+
+		if [ "$?" = 1 ]
+			then
+        			zenity 	--error \
+               				--text="Update canceled."
+		fi
+	)
+}
+
+installation()
+{
+	#Raspberry Pi comes with SSH port deactivated by default
+	activate_ssh
+
+	#Modify SSH port
+	modify_ssh_port
+
+	#Update and upgrade function
+	update_upgrade
+}
+
+installation_stop()
+{
+        zenity --info \
+               --title="Stopped" \
+               --text="More info:  http://www.darkdefense.net"
+}
+
+initial_warning()
+{
+	zenity 	--text-info \
+       		--title="Warning" \
+       		--width=$W \
+       		--height=$H \
+       		--filename=$FILE \
+       		--checkbox="I read and accept the terms."
+
+	case $? in
+    		0)
+        		installation
+			;;
+    		1)
+        		installation_stop
+			;;
+    		-1)
+        		echo "An unexpected error has occurred."
+			;;
+	esac
+}
+
+#First, check if the script was run as sudo. If not, exit.
+check_sudo
+
+#Show the initial warning with general info about consequences of using the script
+initial_warning
+
+
+
+
+##
+#export date=`zenity --calendar --date-format=%Y-%m-%d`
+
+#if [ ! -f ${repository}/${user}/${date}.tgz ] ; then
+
+#echo No such file ${repository}/${user}/${date}.tgz
+#zenity --error --text="I\'m sorry, the backup for $date wasn\'t found."
+#exit;
+#fi
+
+##
+#export files=`tar -tzf ${repository}/${user}/${date}.tgz |
+#zenity --list--title "Select the files to
+#recover" --column "Files" --separator=" " --multiple`
+
+##
+#zenity --info --title="File Recovery Program" --text="Next, you must select
+#which directory to recover your files to"
+
+#export target_dir=`zenity --file-selection --directory`
+
+##
+#zenity --info --title="File Recovery Program" --text="If you would like, I can create a new directory for your recovered files to be saved to. If you would like this, enter the name of the new directory next. Otherwise, just click on OK"
+
+#export dir=`zenity --entry --title="File Recovery Program"`
+
+##
+#if [ -f ${target_dir}/${dir} ] ; then
+#zenity --error --text="I can not create a directory named
+#${target_dir}/
+#${dir} because there is a file with the same name already there"
+#exit
+#fi
+
+#if [ ! -d ${target_dir}/${dir} ] ; then
+#mkdir ${target_dir}/${dir}
+#fi
+
+##
+#tar -xzvf ${repository}/${user}/${date}.tgz -C ${target_dir}/${dir}/ $files |
+#zenity --progress –pulsate
+
+#zenity --info --title="File Recovery Program" --text="File recovery complete."
