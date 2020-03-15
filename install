@@ -1,11 +1,8 @@
 #!/bin/bash
 
-#export repository="/tmp/backups"
-#export user=`whoami`
-
-FILE=`dirname $0`/WARNING
-TOP_MARGIN=80
-RIGHT_MARGIN=40
+FILE=`dirname $0`/README
+TOP_MARGIN=30
+RIGHT_MARGIN=20
 SCREEN_WIDTH=$(xwininfo -root | sed -n 's/.*Width: //p')
 SCREEN_HEIGHT=$(xwininfo -root | sed -n 's/.*Height: //p')
 W=$(( $SCREEN_WIDTH / 2 - $RIGHT_MARGIN ))
@@ -92,7 +89,7 @@ installation_stop()
 initial_warning()
 {
 	zenity 	--text-info \
-       		--title="Warning" \
+       		--title="README" \
        		--width=$W \
        		--height=$H \
        		--filename=$FILE \
@@ -116,50 +113,3 @@ check_sudo
 
 #Show the initial warning with general info about consequences of using the script
 initial_warning
-
-
-
-
-##
-#export date=`zenity --calendar --date-format=%Y-%m-%d`
-
-#if [ ! -f ${repository}/${user}/${date}.tgz ] ; then
-
-#echo No such file ${repository}/${user}/${date}.tgz
-#zenity --error --text="I\'m sorry, the backup for $date wasn\'t found."
-#exit;
-#fi
-
-##
-#export files=`tar -tzf ${repository}/${user}/${date}.tgz |
-#zenity --list--title "Select the files to
-#recover" --column "Files" --separator=" " --multiple`
-
-##
-#zenity --info --title="File Recovery Program" --text="Next, you must select
-#which directory to recover your files to"
-
-#export target_dir=`zenity --file-selection --directory`
-
-##
-#zenity --info --title="File Recovery Program" --text="If you would like, I can create a new directory for your recovered files to be saved to. If you would like this, enter the name of the new directory next. Otherwise, just click on OK"
-
-#export dir=`zenity --entry --title="File Recovery Program"`
-
-##
-#if [ -f ${target_dir}/${dir} ] ; then
-#zenity --error --text="I can not create a directory named
-#${target_dir}/
-#${dir} because there is a file with the same name already there"
-#exit
-#fi
-
-#if [ ! -d ${target_dir}/${dir} ] ; then
-#mkdir ${target_dir}/${dir}
-#fi
-
-##
-#tar -xzvf ${repository}/${user}/${date}.tgz -C ${target_dir}/${dir}/ $files |
-#zenity --progress –pulsate
-
-#zenity --info --title="File Recovery Program" --text="File recovery complete."
