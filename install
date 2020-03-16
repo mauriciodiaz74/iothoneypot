@@ -195,9 +195,20 @@ installation()
 
 installation_stop()
 {
-        zenity --info \
-               --title="Stopped" \
-               --text="More info:  http://www.darkdefense.net"
+        zenity 	--info \
+		--title="Stopped" \
+		--text="More info:  http://www.darkdefense.net" \
+		--width=300 \
+		--height=100
+}
+
+installation_finished()
+{
+        zenity 	--info \
+		--title="Finished!" \
+		--text="Instalon successfully finished." \
+		--width=300 \
+		--height=100
 }
 
 initial_warning()
@@ -230,6 +241,12 @@ check_platform
 initial_warning
 
 #Proccess completed successfully
+installation_finished
+echo
+echo Done!
+echo Check locally if SSH and TELNET ports are open with: nmap 127.0.0.1
+echo Check from other device scanning the network (nmap u others) and trying to connect to SSH an Telnet ports.
+echo
 exit 0
 
 #....PENDING...:
