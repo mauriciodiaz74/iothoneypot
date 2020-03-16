@@ -1,6 +1,8 @@
 #!/bin/bash
 
 FILE=`dirname $0`/README
+MACHINE_TYPE=`uname -m`
+export USER=`whoami`
 TOP_MARGIN=30
 RIGHT_MARGIN=20
 SCREEN_WIDTH=$(xwininfo -root | sed -n 's/.*Width: //p')
@@ -12,25 +14,62 @@ clear
 
 check_sudo()
 {
-	if (( $EUID != 0 )); then
-		echo
-		echo "WARNING:"
-		echo "To use this script, you need to run it as sudo"
-		echo "Please use: <sudo ./install>"
-		echo
+	if (( $EUID != 0 ))
+		then
+			echo
+			echo "WARNING:"
+			echo "To use this script, you need to run it as sudo"
+			echo "Please use: <sudo ./install>"
+			echo
+		exit
+	fi
+}
+
+check_platform()
+{
+	if [ ${MACHINE_TYPE} != 'armv7l' ]
+		then
+			echo
+			echo "WARNING:"
+			echo "This program do not support this plattform"
+			echo "Visit http://www.darkdefense.net/own/iothoneypot/supported"
+			echo "Sorry..."
+			echo
 		exit
 	fi
 }
 
 activate_ssh()
 {
-	systemctl enable ssh
-	systemctl start ssh
+	(
+		echo "20"; sleep 1
+		systemctl enable ssh
+		echo "50"; sleep 1
+		echo "70"; sleep 1
+		echo "90";
+		systemctl start ssh
+	) |
+	(
+		zenity 	--progress \
+       			--width=300 \
+       			--height=100 \
+       			--title="SSH service" \
+       			--text="Enabling and starting SSH service..." \
+       			--percentage=0
+
+		if [ "$?" = 1 ]
+			then
+        			zenity 	--error \
+				      	--width=200 \
+					--height=50 \
+               				--text="Operation canceled."
+		fi
+	)
 }
 
 modify_ssh_port()
 {
-	NEW_PORT=$(zenity --scale --text="Please select the new SSH port" --min-value=1000 --max-value=65535 --value=1000 --step=1)
+	NEW_PORT=$(zenity --scale --width=300 --title="New SSH port" --text="Please select the new port where the real SSH service will be listening" --min-value=1000 --max-value=65535 --value=1000 --step=1)
 	sed -i 's/#Port/Port/g' /etc/ssh/sshd_config
 	sed -i "s/Port.*/Port $NEW_PORT/g" /etc/ssh/sshd_config
 	service ssh restart
@@ -45,16 +84,16 @@ update_upgrade()
 {
 	(
 		echo "10"; sleep 1
-		sudo apt-get update
+		apt-get update
 		echo "30"; sleep 1
 		echo "60"; sleep 1
 		echo "90";
-		sudo apt-get -y upgrade
+		apt-get -y upgrade
 	) |
 	(
 		zenity 	--progress \
-       			--width=20 \
-       			--height=50 \
+       			--width=300 \
+       			--height=100 \
        			--title="Updating" \
        			--text="Updating and upgrading system..." \
        			--percentage=0
@@ -62,6 +101,72 @@ update_upgrade()
 		if [ "$?" = 1 ]
 			then
         			zenity 	--error \
+				      	--width=200 \
+					--height=50 \
+               				--text="Update canceled."
+		fi
+	)
+}
+
+docker_install()
+{
+	(
+		echo "10"; sleep 1
+		curl -fsSL https://get.docker.com -o get-docker.sh
+		echo "20"; sleep 1
+		sh get-docker.sh
+		echo "40"; sleep 1
+		echo "60"; sleep 1
+		usermod -aG docker pi
+		echo "90";
+		systemctl enable docker
+	) |
+	(
+		zenity 	--progress \
+       			--width=300 \
+       			--height=100 \
+       			--title="Docker installation" \
+       			--text="Installing and configurind Docker..." \
+       			--percentage=0
+
+		if [ "$?" = 1 ]
+			then
+        			zenity 	--error \
+				      	--width=200 \
+					--height=50 \
+               				--text="Update canceled."
+		fi
+	)
+	sudo docker run hello-world | zenity --text-info --title="Testing Docker" --width 600
+}
+
+cowrie_install()
+{
+	(
+		echo "10"; sleep 1
+		apt install apt-utils
+		echo "20"; sleep 1
+		git clone https://github.com/cowrie/docker-cowrie.git
+		echo "40"; sleep 1
+		make all
+		echo "60"; sleep 1
+		docker build -t cowrie .
+		echo "90";
+		docker run -p 22:2222/tcp cowrie
+	) |
+	(
+		zenity 	--progress \
+       			--width=300 \
+       			--height=100 \
+       			--title="Cowrie installation" \
+       			--text="Installing and configurind Cowrie..." \
+       			--percentage=0
+
+		if [ "$?" = 1 ]
+			then
+        			zenity 	--error \
+				      	--width=200 \
+					--height=50 \
                				--text="Update canceled."
 		fi
 	)
@@ -77,6 +182,13 @@ installation()
 
 	#Update and upgrade function
 	update_upgrade
+	
+	#Install and configure Docker
+	docker_install
+	
+	#Install and configure Cowrie
+	cowrie_install
+		
 }
 
 installation_stop()
@@ -108,8 +220,15 @@ initial_warning()
 	esac
 }
 
-#First, check if the script was run as sudo. If not, exit.
+#First, check if the script was run as sudo, and if platform is 64 bit. If not, exit.
 check_sudo
+check_platform
 
-#Show the initial warning with general info about consequences of using the script
+#Show the initial warning with general info and considerations of using the script
 initial_warning
+
+#Proccess completed successfully
+exit 0
+
+#....PENDING...:
+# - Complete exit, after Cancel button is pressed in any process.

@@ -1,7 +1,7 @@
 GENERAL CONSIDERATIONS
 
 You are about to install: IoT-Honeypot, which is designed for Raspberry Pi. 
-Visit https://www.darkdefense.net/iothoneypot/supported, to learn about the Raspberry Pi versions supported so far.
+Visit http://www.darkdefense.net/own/iothoneypot/supported, to learn about the Raspberry Pi versions supported so far.
 
 If the device you are installing on is not a Raspberry Pi, or the model is not supported, we recommend that you cancel the installation.
 
