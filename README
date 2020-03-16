@@ -1,6 +1,6 @@
 GENERAL CONSIDERATIONS
 
-This is an IoT-Honeypot designed for Raspberry Pi.
+This is IoT-Honeypot is designed for Raspberry Pi (tested in Raspberry Pi 3B+ / Raspbian GNU/Linux 10 (buster). ).
  
 Visit http://www.darkdefense.net/own/iothoneypot/supported, to learn about the Raspberry Pi versions supported so far.
 
