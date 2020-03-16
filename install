@@ -1,5 +1,6 @@
 #!/bin/bash
 
+#Variables
 FILE=`dirname $0`/README
 MACHINE_TYPE=`uname -m`
 export USER=`whoami`
@@ -10,10 +11,12 @@ SCREEN_HEIGHT=$(xwininfo -root | sed -n 's/.*Height: //p')
 W=$(( $SCREEN_WIDTH / 2 - $RIGHT_MARGIN ))
 H=$(( $SCREEN_HEIGHT - 2 * $TOP_MARGIN ))
 
+#Clean terminal
 clear
 
 check_sudo()
 {
+	#Check if the script was started by a sudo user. If not EXIT.
 	if (( $EUID != 0 ))
 		then
 			echo
@@ -27,6 +30,7 @@ check_sudo()
 
 check_platform()
 {
+	#Check if the platform is supported. If not EXIT.
 	if [ ${MACHINE_TYPE} != 'armv7l' ]
 		then
 			echo
@@ -43,6 +47,7 @@ activate_ssh()
 {
 	(
 		echo "20"; sleep 1
+		#Enable SSH. By default is closed in Rapsberry Pi.
 		systemctl enable ssh
 		echo "50"; sleep 1
 		echo "70"; sleep 1
@@ -70,9 +75,12 @@ activate_ssh()
 modify_ssh_port()
 {
 	NEW_PORT=$(zenity --scale --width=300 --title="New SSH port" --text="Please select the new port where the real SSH service will be listening" --min-value=1000 --max-value=65535 --value=1000 --step=1)
+	#Modify sshd_config file to change default ssh port 22, to user selected port.
 	sed -i 's/#Port/Port/g' /etc/ssh/sshd_config
 	sed -i "s/Port.*/Port $NEW_PORT/g" /etc/ssh/sshd_config
+	#Restart SSH service to apply port change
 	service ssh restart
+	#Show the new SSH port
 	ss -tlpn | grep ssh | (zenity --text-info --title="SSH port confirmation" --width 1000
 		if [ "$?" = 1 ]
 			then modify_ssh_port
@@ -84,10 +92,12 @@ update_upgrade()
 {
 	(
 		echo "10"; sleep 1
+		#Update system repositories
 		apt-get update
 		echo "30"; sleep 1
 		echo "60"; sleep 1
 		echo "90";
+		#Upgrade packages
 		apt-get -y upgrade
 	) |
 	(
@@ -111,14 +121,23 @@ update_upgrade()
 docker_install()
 {
 	(
+		echo "0"; sleep 1
+		#Stop and remove all docker containers images and volumes
+		docker system prune -af
 		echo "10"; sleep 1
+		#uninstall previous versions
+		apt-get remove docker docker-engine docker.io containerd runc
+		echo "30"; sleep 1
+		#Download docker installer script
 		curl -fsSL https://get.docker.com -o get-docker.sh
-		echo "20"; sleep 1
+		echo "50"; sleep 1
+		#Run docker installer script
 		sh get-docker.sh
-		echo "40"; sleep 1
 		echo "60"; sleep 1
-		usermod -aG docker pi
+		#Add current user to docker group
+		usermod -aG docker ${USER}
 		echo "90";
+		#Enable docker to start on boot with systemd
 		systemctl enable docker
 	) |
 	(
@@ -126,7 +145,7 @@ docker_install()
        			--width=300 \
        			--height=100 \
        			--title="Docker installation" \
-       			--text="Installing and configurind Docker..." \
+       			--text="Installing and configuring Docker..." \
        			--percentage=0
 
 		if [ "$?" = 1 ]
@@ -137,6 +156,7 @@ docker_install()
                				--text="Update canceled."
 		fi
 	)
+	#Run Docker hello-world to test docker installation
 	sudo docker run hello-world | zenity --text-info --title="Testing Docker" --width 600
 }
 
@@ -144,24 +164,29 @@ cowrie_install()
 {
 	(
 		echo "10"; sleep 1
-		apt install apt-utils
+		#Remove previous cowrie docker folder instalations
+		rm -rf docker-cowrie
 		echo "20"; sleep 1
+		#Install pre-requirements
+		apt install apt-utils
+		echo "30"; sleep 1
+		#Download Cowrie
 		git clone https://github.com/cowrie/docker-cowrie.git
 		echo "40"; sleep 1
 		cd docker-cowrie
 		echo "50"; sleep 1
-		make all
-		echo "60"; sleep 1
+		#Compile cowrie
 		docker build -t cowrie .
 		echo "90";
-		docker run -p 22:2222/tcp cowrie
+		#Run cowrie in a container listen in port 22, and redirected to port 2222 inside container
+		docker run -p 22:2222/tcp cowrie &
 	) |
 	(
 		zenity 	--progress \
-       			--width=300 \
+       			--width=500 \
        			--height=100 \
        			--title="Cowrie installation" \
-       			--text="Installing and configurind Cowrie..." \
+       			--text="Installing and configuring Cowrie. Patience, this may take a while..." \
        			--percentage=0
 
 		if [ "$?" = 1 ]
@@ -190,7 +215,6 @@ installation()
 	
 	#Install and configure Cowrie
 	cowrie_install
-		
 }
 
 installation_stop()
@@ -244,10 +268,15 @@ initial_warning
 installation_finished
 echo
 echo Done!
-echo Check locally if SSH and TELNET ports are open with: nmap 127.0.0.1
-echo Check from other device scanning the network (nmap u others) and trying to connect to SSH an Telnet ports.
+echo Check locally if SSH port is open with: nmap 127.0.0.1
+echo Check locally if SSH port is accepting connections: ssh pi@127.0.0.1
+echo Check from other device scanning the network and trying to connect to SSH an Telnet ports.
 echo
 exit 0
 
-#....PENDING...:
-# - Complete exit, after Cancel button is pressed in any process.
+#######################################################################################################
+#.... STILL PENDING...:
+# - Exit after Cancel button is pressed in any process. So far, only Cancel button in port selection...
+#...is working. If Cancel is pressed, ask again to select a port.
+# - Add IoT devices. Devices are configured and working, but assigning a port is still pending
+# - TELNET PORT availability.
