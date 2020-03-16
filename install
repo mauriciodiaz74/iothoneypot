@@ -148,6 +148,8 @@ cowrie_install()
 		echo "20"; sleep 1
 		git clone https://github.com/cowrie/docker-cowrie.git
 		echo "40"; sleep 1
+		cd docker-cowrie
+		echo "50"; sleep 1
 		make all
 		echo "60"; sleep 1
 		docker build -t cowrie .
