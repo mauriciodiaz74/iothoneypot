@@ -1,0 +1,70 @@
+I) Testing the installation:
+
+1) SSH status/port:
+systemctl status ssh
+OUTPUT:
+ssh.service - OpenBSD Secure Shell server
+   Loaded: loaded (/lib/systemd/system/ssh.service; enabled; vendor preset: enab
+   Active: active (running) since Sat 2020-03-21 17:28:23 GMT; 36min ago
+...
+
+sudo netstat -tlpn | grep ssh
+OUTPUT:
+tcp        0      0 0.0.0.0:20759           0.0.0.0:*               LISTEN      442/sshd            
+tcp6       0      0 :::20759                :::*                    LISTEN      442/sshd 
+
+
+2) Docker running:
+docker --version
+OUTPUT:
+Docker version 19.03.8, build afacb8b
+
+systemctl status docker
+OUTPUT:
+docker.service - Docker Application Container Engine
+   Loaded: loaded (/lib/systemd/system/docker.service; enabled; vendor preset: enabled)
+   Active: active (running) since Sat 2020-03-21 17:28:31 GMT; 36min ago
+
+sudo docker ps
+OUTPUT:
+CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS                            NAMES
+04e9ef28ba35        cowrie              "cowrie start -n"   3 minutes ago       Up 2 minutes        2223/tcp, 0.0.0.0:22->2222/tcp   unruffled_bhaskara
+
+
+3) Cowrie status
+- Connect to the Cowrie docker instance:
+sudo docker exec -it 04e9ef28ba35 /bin/bash
+- Start a TAIL session to check (live) the Cowrie json log, and try the testings from II (testing the honeypot)
+tail -f var/log/cowrie/cowrie.json
+
+
+II) Testing the Honeypot
+
+a) In the same machine where is installed de Honeypot
+1) SSH/Telnet ports:
+Note: If not installed, install nmap (sudo apt-get install nmap)
+nmap 127.0.0.1
+OUTPUT:
+Starting Nmap 7.70 ( https://nmap.org ) at 2020-03-21 18:06 GMT
+Nmap scan report for localhost (127.0.0.1)
+Host is up (0.00047s latency).
+Not shown: 998 closed ports
+PORT     STATE SERVICE
+22/tcp   open  ssh
+5900/tcp open  vnc
+
+
+2) SSH port connection:
+ssh pi@127.0.0.1
+OUTPUT:
+The authenticity of host '127.0.0.1 (127.0.0.1)' can't be established.
+RSA key fingerprint is SHA256:FDTmitSfEddhd/XvMa6nPPHLs3c62f7U2K2EJaOMsSk.
+Are you sure you want to continue connecting (yes/no)?
+
+3) Telnet port connection:
+telnet 127.0.0.1
+OUTPUT:
+
+
+b) From another machine:
+Do the same steps from a), but instead of 127.0.0.1, use the raspberry pi IP.
