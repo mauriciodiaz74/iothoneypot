@@ -157,7 +157,10 @@ docker_install()
 		fi
 	)
 	#Run Docker hello-world to test docker installation
-	sudo docker run hello-world | zenity --text-info --title="Testing Docker" --width 600
+	sudo docker run hello-world | zenity --text-info \ 
+					     --title="Testing Docker" \ 
+					     --width 600 \
+					     --height=300
 }
 
 cowrie_install()
@@ -165,10 +168,10 @@ cowrie_install()
 	(
 		echo "10"; sleep 1
 		#Remove previous cowrie docker folder instalations
-		rm -rf docker-cowrie
+		sudo rm -rf docker-cowrie
 		echo "20"; sleep 1
 		#Install pre-requirements
-		apt install apt-utils
+		sudo apt install apt-utils
 		echo "30"; sleep 1
 		#Download Cowrie
 		git clone https://github.com/cowrie/docker-cowrie.git
@@ -176,10 +179,10 @@ cowrie_install()
 		cd docker-cowrie
 		echo "50"; sleep 1
 		#Compile cowrie
-		docker build -t cowrie .
+		sudo docker build -t cowrie .
 		echo "90";
 		#Run cowrie in the background and in a container listen in port 22, and redirected to port 2222 inside container
-		docker run -p 22:2222/tcp cowrie &
+		sudo docker run -p 22:2222/tcp cowrie &
 	) |
 	(
 		zenity 	--progress \
