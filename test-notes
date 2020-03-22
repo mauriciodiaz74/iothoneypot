@@ -32,9 +32,17 @@ CONTAINER ID        IMAGE               COMMAND             CREATED             
 
 
 3) Cowrie status
-- Connect to the Cowrie docker instance:
-sudo docker exec -it 04e9ef28ba35 /bin/bash
-- Start a TAIL session to check (live) the Cowrie json log, and try the testings from II (testing the honeypot)
+a) Connect to the Cowrie docker instance:
+- Get the container ID:
+sudo docker ps
+OUTPUT:
+CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS                            NAMES
+9c6a63df7b2b        cowrie              "cowrie start -n"   21 hours ago        Up 21 hours         2223/tcp, 0.0.0.0:22->2222/tcp   happy_snyder
+
+- Connecto to the container:
+sudo docker exec -it 9c6a63df7b2b /bin/bash
+
+b) Start a TAIL session to check (live) the Cowrie json log, and try the testings from II (testing the honeypot)
 tail -f var/log/cowrie/cowrie.json
 
 
