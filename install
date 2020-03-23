@@ -183,6 +183,10 @@ cowrie_install()
 		echo "90";
 		#Run cowrie in the background and in a container listen in port 22, and redirected to port 2222 inside container
 		sudo docker run -p 22:2222/tcp cowrie &
+		sudo docker ps
+		
+		sudo sed -i '/# Enable Telnet support, disabled by default/{n;s/enable.*/enabled = true/}' cowrie.cfg
+
 	) |
 	(
 		zenity 	--progress \
