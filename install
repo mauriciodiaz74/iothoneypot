@@ -43,6 +43,18 @@ check_platform()
 	fi
 }
 
+error_check()
+{
+	if [ "$?" -ne 0 ]
+		then
+       			zenity 	--error \
+			      	--width=300 \
+				--height=50 \
+       				--text="$1. Operation canceled."
+			exit 1
+	fi
+}
+
 activate_ssh()
 {
 	(
@@ -61,14 +73,7 @@ activate_ssh()
        			--title="SSH service" \
        			--text="Enabling and starting SSH service..." \
        			--percentage=0
-
-		if [ "$?" = 1 ]
-			then
-        			zenity 	--error \
-				      	--width=200 \
-					--height=50 \
-               				--text="Operation canceled."
-		fi
+		error_check 'SSH activation'
 	)
 }
 
@@ -107,14 +112,7 @@ update_upgrade()
        			--title="Updating" \
        			--text="Updating and upgrading system..." \
        			--percentage=0
-
-		if [ "$?" = 1 ]
-			then
-        			zenity 	--error \
-				      	--width=200 \
-					--height=50 \
-               				--text="Update canceled."
-		fi
+		error_check 'Upgrade'
 	)
 }
 
@@ -147,14 +145,7 @@ docker_install()
        			--title="Docker installation" \
        			--text="Installing and configuring Docker..." \
        			--percentage=0
-
-		if [ "$?" = 1 ]
-			then
-        			zenity 	--error \
-				      	--width=200 \
-					--height=50 \
-               				--text="Update canceled."
-		fi
+		error_check
 	)
 	#Run Docker hello-world to test docker installation
 	sudo docker run hello-world | zenity --text-info \ 
@@ -198,14 +189,7 @@ cowrie_install()
        			--title="Cowrie installation" \
        			--text="Installing and configuring Cowrie. Patience, this may take a while..." \
        			--percentage=0
-
-		if [ "$?" = 1 ]
-			then
-        			zenity 	--error \
-				      	--width=200 \
-					--height=50 \
-               				--text="Update canceled."
-		fi
+		error_check 'Cowrie installation'
 	)
 }
 
@@ -266,6 +250,13 @@ initial_warning()
 			;;
 	esac
 }
+
+#Installation LOG
+logging=/var/log/iothoneypot_install.log
+mkfifo ${logging}.pipe
+tee < ${logging}.pipe $logging &
+exec &> ${logging}.pipe
+rm ${logging}.pipe
 
 #First, check if the script was run as sudo, and if platform is 64 bit. If not, exit.
 check_sudo
