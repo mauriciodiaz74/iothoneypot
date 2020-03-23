@@ -43,7 +43,7 @@ check_platform()
 	fi
 }
 
-error_check()
+check_error()
 {
 	if [ "$?" -ne 0 ]
 		then
@@ -73,7 +73,7 @@ activate_ssh()
        			--title="SSH service" \
        			--text="Enabling and starting SSH service..." \
        			--percentage=0
-		error_check 'SSH activation'
+		check_error 'SSH activation'
 	)
 }
 
@@ -112,7 +112,7 @@ update_upgrade()
        			--title="Updating" \
        			--text="Updating and upgrading system..." \
        			--percentage=0
-		error_check 'Upgrade'
+		check_error 'Upgrade'
 	)
 }
 
@@ -145,7 +145,7 @@ docker_install()
        			--title="Docker installation" \
        			--text="Installing and configuring Docker..." \
        			--percentage=0
-		error_check
+		check_error 'Docker'
 	)
 	#Run Docker hello-world to test docker installation
 	sudo docker run hello-world | zenity --text-info \ 
@@ -189,7 +189,7 @@ cowrie_install()
        			--title="Cowrie installation" \
        			--text="Installing and configuring Cowrie. Patience, this may take a while..." \
        			--percentage=0
-		error_check 'Cowrie installation'
+		check_error 'Cowrie installation'
 	)
 }
 
