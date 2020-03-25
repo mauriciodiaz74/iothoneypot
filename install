@@ -14,6 +14,16 @@ H=$(( $SCREEN_HEIGHT - 2 * $TOP_MARGIN ))
 #Clean terminal
 clear
 
+logging()
+{
+	#Log all commands output
+	logging=/var/log/iothoneypot_install.log
+	mkfifo ${logging}.pipe
+	tee < ${logging}.pipe $logging &
+	exec &> ${logging}.pipe
+	rm ${logging}.pipe
+}
+
 check_sudo()
 {
 	#Check if the script was started by a sudo user. If not EXIT.
@@ -98,12 +108,12 @@ update_upgrade()
 	(
 		echo "10"; sleep 1
 		#Update system repositories
-		apt-get update
+		sudo apt-get update
 		echo "30"; sleep 1
 		echo "60"; sleep 1
 		echo "90";
 		#Upgrade packages
-		apt-get -y upgrade
+		sudo apt-get -y upgrade
 	) |
 	(
 		zenity 	--progress \
@@ -121,22 +131,22 @@ docker_install()
 	(
 		echo "0"; sleep 1
 		#Stop and remove all docker containers images and volumes
-		docker system prune -af
+		sudo docker system prune -af
 		echo "10"; sleep 1
 		#uninstall previous versions
-		apt-get remove docker docker-engine docker.io containerd runc
+		sudo apt-get remove docker docker-engine docker.io containerd runc
 		echo "30"; sleep 1
 		#Download docker installer script
 		curl -fsSL https://get.docker.com -o get-docker.sh
 		echo "50"; sleep 1
 		#Run docker installer script
-		sh get-docker.sh
+		sudo sh get-docker.sh
 		echo "60"; sleep 1
 		#Add current user to docker group
-		usermod -aG docker ${USER}
+		sudo usermod -aG docker ${USER}
 		echo "90";
 		#Enable docker to start on boot with systemd
-		systemctl enable docker
+		sudo systemctl enable docker
 	) |
 	(
 		zenity 	--progress \
@@ -174,22 +184,69 @@ cowrie_install()
 		echo "90";
 		#Run cowrie in the background and in a container listen in port 22, and redirected to port 2222 inside container
 		sudo docker run -p 22:2222/tcp cowrie &
-		#Get the container ID from cowrie instance
-		containerid=$(sudo docker ps | sed -n '2 p' | sed 's/^\(............\).*/\1/;q')
-		#Connect to a bash session inside cowrie docker instance
-		sudo docker exec -it $containerid /bin/bash
-		#Edit cowrie config file, in order to enable TELNET honeypot (port 23)
-		sudo sed -i '/# Enable Telnet support, disabled by default/{n;s/enable.*/enabled = true/}' cowrie.cfg
-		#
 	) |
 	(
 		zenity 	--progress \
        			--width=500 \
        			--height=100 \
        			--title="Cowrie installation" \
-       			--text="Installing and configuring Cowrie. Patience, this may take a while..." \
+       			--text="Installing Cowrie. Patience, this may take a while... 45 min. approx." \
        			--percentage=0
 		check_error 'Cowrie installation'
+	)
+}
+
+cowrie_config()
+{
+	(
+		echo "10"; sleep 1
+		#Install adn enable telnet
+		##sudo apt-get -y install telnetd
+		##sudo /etc/init.d/openbsd-inetd restart
+		echo "20"; sleep 1
+		#Get the container ID from cowrie instance
+		containerid=$(sudo docker ps | sed -n '2 p' | sed 's/^\(............\).*/\1/;q')
+		echo "30"; sleep 1
+		#Connect to a bash session inside cowrie docker instance
+		sudo docker exec -it $containerid /bin/bash
+		echo "40"; sleep 1
+		# Backup cowrie.cfg.dist to cowrie.cfg. The latter takes precedence over the other. Rename userdb to .txt for ssh honeypot access user/passwords.
+		cd etc && cp cowrie.cfg.dist cowrie.cfg && mv userdb.example userdb.txt
+		# Edit userdb.txt and change some too much obvious passwords.
+		sed -i 's/root:x:!\/honeypot.*/root:x:!admin/' userdb.txt
+		sed -i 's/root:x:\*.*/root:x:toor/g' userdb.txt
+		#Edit cowrie config file.
+		#...to enable TELNET honeypot, port 23:
+		sed -i '/# Enable Telnet support, disabled by default/{n;s/enable.*/enabled = true/}' cowrie.cfg
+		echo "50"; sleep 1
+		#...to enable SPLUNK forwarding in output_splunk section:
+		#Line 1. Remove the # from the output_splunk line.
+		sed -i 's/#\[output_splunk\]/\[output_splunk\]/' cowrie.cfg
+		#Line 2. Enable Splunk
+		sed -i '/output_splunk/{n;s/#enabled.*/enabled = true/}' cowrie.cfg
+		echo "60"; sleep 1
+		#Line 3. Change localhost to the remote server address where Splunk is installed and running.
+		sed -i '/output_splunk/{n;n;s/#url = https:\/\/localhost:8088\/services.*$/url = https:\/\/34.244.181.181:8088\/services\/collector\/event/}' cowrie.cfg
+		echo "70"; sleep 1
+		#Line 4. Update the Token value from the HTTP event collector in Splunk remote server.
+		sed -i '/output_splunk/{n;n;n;s/#token = 6A0EA6C6.*$/token = 78774d21-5d4d-40ba-a07b-98ad6ac27529/}' cowrie.cfg
+		echo "80"; sleep 		
+		#Lines 5, 6 and 7. Remove the #
+		sed -i '/output_splunk/{n;n;n;n;s/#index.*/index = cowrie/}' cowrie.cfg
+		sed -i '/output_splunk/{n;n;n;n;n;s/#sourcetype.*/sourcetype = cowrie/}' cowrie.cfg
+		sed -i '/output_splunk/{n;n;n;n;n;n;s/#source.*/source = cowrie/}' cowrie.cfg
+		sudo docker restart $containerid
+		echo "90";
+		exit
+	) |
+	(
+		zenity 	--progress \
+       			--width=500 \
+       			--height=100 \
+       			--title="Cowrie configuration" \
+       			--text="Configuring Cowrie. This include enabling Telnet honeypot" \
+       			--percentage=0
+		check_error 'Cowrie configuration'
 	)
 }
 
@@ -207,8 +264,11 @@ installation()
 	#Install and configure Docker
 	docker_install
 	
-	#Install and configure Cowrie
+	#Install Cowrie
 	cowrie_install
+
+	#Cowrie, special configurations
+	cowrie_config
 }
 
 installation_stop()
@@ -252,11 +312,7 @@ initial_warning()
 }
 
 #Installation LOG
-logging=/var/log/iothoneypot_install.log
-mkfifo ${logging}.pipe
-tee < ${logging}.pipe $logging &
-exec &> ${logging}.pipe
-rm ${logging}.pipe
+logging
 
 #First, check if the script was run as sudo, and if platform is 64 bit. If not, exit.
 check_sudo
