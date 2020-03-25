@@ -163,9 +163,9 @@ docker_install()
 	)
 	#Run Docker hello-world to test docker installation
 	sudo docker run hello-world | zenity 	--text-info \
-					     					--title="Testing Docker" \
-					     					--width=900 \
-					     					--height=300
+																				--width=900 \
+					     													--height=300 \
+																				--title="Testing Docker"
 }
 
 cowrie_install()
