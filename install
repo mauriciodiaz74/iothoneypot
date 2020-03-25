@@ -58,10 +58,10 @@ check_error()
 	if [ "$?" -ne 0 ]
 		then
        			zenity 	--error \
-			      	--width=300 \
-				--height=50 \
-       				--text="$1. Operation canceled."
-			exit 1
+			      		--width=300 \
+						--height=50 \
+       					--text="$1. Operation canceled."
+				exit 1
 	fi
 }
 
@@ -130,11 +130,15 @@ docker_install()
 {
 	(
 		echo "0"; sleep 1
-		#Stop and remove all docker containers images and volumes
-		sudo docker system prune -af
-		echo "10"; sleep 1
-		#uninstall previous versions
-		sudo apt-get remove docker docker-engine docker.io containerd runc
+		#Check if docker is installed
+		if [ -x "$(command -v docker)" ]
+			then
+    					#Stop and remove all docker containers images and volumes
+    					sudo docker system prune -af
+						echo "10"; sleep 1
+						#uninstall previous versions
+						sudo apt-get remove docker docker-engine docker.io containerd runc
+    	fi
 		echo "30"; sleep 1
 		#Download docker installer script
 		curl -fsSL https://get.docker.com -o get-docker.sh
@@ -158,18 +162,21 @@ docker_install()
 		check_error 'Docker'
 	)
 	#Run Docker hello-world to test docker installation
-	sudo docker run hello-world | zenity --text-info \ 
-					     --title="Testing Docker" \ 
-					     --width 600 \
-					     --height=300
+	sudo docker run hello-world | zenity 	--text-info \
+					     					--title="Testing Docker" \
+					     					--width=900 \
+					     					--height=300
 }
 
 cowrie_install()
 {
 	(
 		echo "10"; sleep 1
-		#Remove previous cowrie docker folder instalations
-		sudo rm -rf docker-cowrie
+		if [ -d /home/pi/iothoneypot/docker-cowrie ]
+			then
+				#Remove previous cowrie docker folder instalations
+				sudo rm -rf docker-cowrie
+		fi
 		echo "20"; sleep 1
 		#Install pre-requirements
 		sudo apt install apt-utils
