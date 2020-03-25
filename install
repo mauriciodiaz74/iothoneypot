@@ -58,10 +58,10 @@ check_error()
 	if [ "$?" -ne 0 ]
 		then
        			zenity 	--error \
-			      		--width=300 \
-						--height=50 \
-       					--text="$1. Operation canceled."
-				exit 1
+			      				--width=300 \
+										--height=50 \
+       							--text="$1. Operation canceled."
+						exit 1
 	fi
 }
 
@@ -100,7 +100,7 @@ modify_ssh_port()
 		if [ "$?" = 1 ]
 			then modify_ssh_port
 		fi
-	)	
+	)
 }
 
 update_upgrade()
@@ -197,7 +197,7 @@ cowrie_install()
        			--width=500 \
        			--height=100 \
        			--title="Cowrie installation" \
-       			--text="Installing Cowrie. Patience, this may take a while... 45 min. approx." \
+       			--text="Installing Cowrie. Patience, this could take 45 min. approx." \
        			--percentage=0
 		check_error 'Cowrie installation'
 	)
@@ -237,7 +237,7 @@ cowrie_config()
 		echo "70"; sleep 1
 		#Line 4. Update the Token value from the HTTP event collector in Splunk remote server.
 		sed -i '/output_splunk/{n;n;n;s/#token = 6A0EA6C6.*$/token = 78774d21-5d4d-40ba-a07b-98ad6ac27529/}' cowrie.cfg
-		echo "80"; sleep 		
+		echo "80"; sleep
 		#Lines 5, 6 and 7. Remove the #
 		sed -i '/output_splunk/{n;n;n;n;s/#index.*/index = cowrie/}' cowrie.cfg
 		sed -i '/output_splunk/{n;n;n;n;n;s/#sourcetype.*/sourcetype = cowrie/}' cowrie.cfg
@@ -267,10 +267,10 @@ installation()
 
 	#Update and upgrade function
 	update_upgrade
-	
+
 	#Install and configure Docker
 	docker_install
-	
+
 	#Install Cowrie
 	cowrie_install
 
@@ -281,19 +281,19 @@ installation()
 installation_stop()
 {
         zenity 	--info \
-		--title="Stopped" \
-		--text="More info:  http://www.darkdefense.net" \
-		--width=300 \
-		--height=100
+								--title="Stopped" \
+								--text="More info:  http://www.darkdefense.net" \
+								--width=300 \
+								--height=100
 }
 
 installation_finished()
 {
         zenity 	--info \
-		--title="Finished!" \
-		--text="Instalon successfully finished." \
-		--width=300 \
-		--height=100
+								--title="Finished!" \
+								--text="Instalon successfully finished." \
+								--width=300 \
+								--height=100
 }
 
 initial_warning()
