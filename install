@@ -237,9 +237,9 @@ cowrie_config()
 		sed -i '/output_splunk/{n;n;n;n;s/#index.*/index = cowrie/}' etc/cowrie.cfg
 		sed -i '/output_splunk/{n;n;n;n;n;s/#sourcetype.*/sourcetype = cowrie/}' etc/cowrie.cfg
 		sed -i '/output_splunk/{n;n;n;n;n;n;s/#source.*/source = cowrie/}' etc/cowrie.cfg
+		exit
 		sudo docker restart $containerid
 		echo "90";
-		exit
 	) |
 	(
 		zenity 	--progress \
