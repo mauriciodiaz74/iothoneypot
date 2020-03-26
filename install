@@ -182,7 +182,9 @@ cowrie_install()
 		git clone https://github.com/cowrie/docker-cowrie.git
 		echo "50"; sleep 1
 		#Compile cowrie
-		sudo docker build -t docker-cowrie/cowrie .
+		cd docker-cowrie
+		sudo docker build -t cowrie .
+		cd ..
 		echo "90";
 		#Run cowrie in the background and in a container listen in port 22, and redirected to port 2222 inside container
 		sudo docker run -p 22:2222/tcp cowrie &
