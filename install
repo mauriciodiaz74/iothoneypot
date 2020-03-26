@@ -133,8 +133,8 @@ docker_install()
 		#Check if docker is installed
 		if [ -x "$(command -v docker)" ]
 			then
-    					#Stop and remove all docker containers images and volumes
-    					sudo docker system prune -af
+    				#Stop and remove all docker containers images and volumes
+    				sudo docker system prune -af
 						echo "10"; sleep 1
 						#uninstall previous versions
 						sudo apt-get remove docker docker-engine docker.io containerd runc
@@ -180,11 +180,9 @@ cowrie_install()
 		echo "30"; sleep 1
 		#Download Cowrie
 		git clone https://github.com/cowrie/docker-cowrie.git
-		echo "40"; sleep 1
-		cd docker-cowrie
 		echo "50"; sleep 1
 		#Compile cowrie
-		sudo docker build -t cowrie .
+		sudo docker build -t docker-cowrie/cowrie .
 		echo "90";
 		#Run cowrie in the background and in a container listen in port 22, and redirected to port 2222 inside container
 		sudo docker run -p 22:2222/tcp cowrie &
@@ -215,30 +213,30 @@ cowrie_config()
 		sudo docker exec -it $containerid /bin/bash
 		echo "40"; sleep 1
 		# Backup cowrie.cfg.dist to cowrie.cfg. The latter takes precedence over the other. Rename userdb to .txt for ssh honeypot access user/passwords.
-		cd etc && cp cowrie.cfg.dist cowrie.cfg && mv userdb.example userdb.txt
+		cp etc/cowrie.cfg.dist etc/cowrie.cfg && mv etc/userdb.example etc/userdb.txt
 		# Edit userdb.txt and change some too much obvious passwords.
-		sed -i 's/root:x:!\/honeypot.*/root:x:!admin/' userdb.txt
-		sed -i 's/root:x:\*.*/root:x:toor/g' userdb.txt
+		sed -i 's/root:x:!\/honeypot.*/root:x:!admin/' etc/userdb.txt
+		sed -i 's/root:x:\*.*/root:x:toor/g' etc/userdb.txt
 		#Edit cowrie config file.
 		#...to enable TELNET honeypot, port 23:
-		sed -i '/# Enable Telnet support, disabled by default/{n;s/enable.*/enabled = true/}' cowrie.cfg
+		sed -i '/# Enable Telnet support, disabled by default/{n;s/enable.*/enabled = true/}' etc/cowrie.cfg
 		echo "50"; sleep 1
 		#...to enable SPLUNK forwarding in output_splunk section:
 		#Line 1. Remove the # from the output_splunk line.
-		sed -i 's/#\[output_splunk\]/\[output_splunk\]/' cowrie.cfg
+		sed -i 's/#\[output_splunk\]/\[output_splunk\]/' etc/cowrie.cfg
 		#Line 2. Enable Splunk
-		sed -i '/output_splunk/{n;s/#enabled.*/enabled = true/}' cowrie.cfg
+		sed -i '/output_splunk/{n;s/#enabled.*/enabled = true/}' etc/cowrie.cfg
 		echo "60"; sleep 1
 		#Line 3. Change localhost to the remote server address where Splunk is installed and running.
-		sed -i '/output_splunk/{n;n;s/#url = https:\/\/localhost:8088\/services.*$/url = https:\/\/34.244.181.181:8088\/services\/collector\/event/}' cowrie.cfg
+		sed -i '/output_splunk/{n;n;s/#url = https:\/\/localhost:8088\/services.*$/url = https:\/\/34.244.181.181:8088\/services\/collector\/event/}' etc/cowrie.cfg
 		echo "70"; sleep 1
 		#Line 4. Update the Token value from the HTTP event collector in Splunk remote server.
-		sed -i '/output_splunk/{n;n;n;s/#token = 6A0EA6C6.*$/token = 78774d21-5d4d-40ba-a07b-98ad6ac27529/}' cowrie.cfg
+		sed -i '/output_splunk/{n;n;n;s/#token = 6A0EA6C6.*$/token = 78774d21-5d4d-40ba-a07b-98ad6ac27529/}' etc/cowrie.cfg
 		echo "80"; sleep
 		#Lines 5, 6 and 7. Remove the #
-		sed -i '/output_splunk/{n;n;n;n;s/#index.*/index = cowrie/}' cowrie.cfg
-		sed -i '/output_splunk/{n;n;n;n;n;s/#sourcetype.*/sourcetype = cowrie/}' cowrie.cfg
-		sed -i '/output_splunk/{n;n;n;n;n;n;s/#source.*/source = cowrie/}' cowrie.cfg
+		sed -i '/output_splunk/{n;n;n;n;s/#index.*/index = cowrie/}' etc/cowrie.cfg
+		sed -i '/output_splunk/{n;n;n;n;n;s/#sourcetype.*/sourcetype = cowrie/}' etc/cowrie.cfg
+		sed -i '/output_splunk/{n;n;n;n;n;n;s/#source.*/source = cowrie/}' etc/cowrie.cfg
 		sudo docker restart $containerid
 		echo "90";
 		exit
