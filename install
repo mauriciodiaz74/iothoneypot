@@ -176,23 +176,23 @@ docker_install()
 cowrie_install()
 {
 	(
-		echo "10"; sleep 1
+		echo "5"; sleep 1
 		if [ -d /home/pi/iothoneypot/docker-cowrie ]
 			then
 				#Remove docker-cowrie folder
 				sudo rm -r /home/pi/iothoneypot/docker-cowrie
 		fi
-		echo "20"; sleep 1
+		echo "10"; sleep 1
 		#Install pre-requirements
 		sudo apt install apt-utils
-		echo "30"; sleep 1
+		echo "15"; sleep 1
 		#Download Cowrie
-		git clone https://github.com/cowrie/docker-cowrie.git
-		echo "50"; sleep 1
+		sudo git clone https://github.com/cowrie/docker-cowrie.git
+		echo "20"; sleep 1
 		#Compile cowrie
-		cd docker-cowrie
-		sudo docker build -t cowrie .
-		cd ..
+		sudo docker build -t cowrie /home/pi/iothoneypot/docker-cowrie
+		echo "50"; sleep 1
+		cd /home/pi/iothoneypot
 		echo "90";
 		#Run cowrie in the background and in a container listen in port 22, and redirected to port 2222 inside container
 		sudo docker run -p 22:2222/tcp cowrie > output.log 2>&1 &
