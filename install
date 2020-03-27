@@ -111,9 +111,9 @@ update_upgrade()
 		sudo apt-get update
 		echo "30"; sleep 1
 		echo "60"; sleep 1
-		echo "90";
 		#Upgrade packages
 		sudo apt-get -y upgrade
+		echo "90";
 	) |
 	(
 		zenity 	--progress \
@@ -146,8 +146,6 @@ docker_install()
 						sudo groupdel docker
 						sudo rm -rf /var/run/docker.sock
 						echo "30"; sleep 1
-						#uninstall previous versions
-						sudo rm -r /home/pi/iothoneypot/docker-cowrie
     	fi
 		echo "40"; sleep 1
 		#Download docker installer script
@@ -181,8 +179,8 @@ cowrie_install()
 		echo "10"; sleep 1
 		if [ -d /home/pi/iothoneypot/docker-cowrie ]
 			then
-				#Remove previous cowrie docker folder instalations
-				sudo rm -rf docker-cowrie
+				#Remove docker-cowrie folder
+				sudo rm -r /home/pi/iothoneypot/docker-cowrie
 		fi
 		echo "20"; sleep 1
 		#Install pre-requirements
