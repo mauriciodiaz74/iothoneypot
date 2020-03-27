@@ -139,7 +139,7 @@ docker_install()
 						sudo docker image prune --all --force
 						sudo docker volume prune --force
     				sudo docker system prune --all --force --volumes
-						sudo apt-get purge -y docker-engine docker docker.io docker-ce docker-ce-cli
+						sudo apt-get purge -y docker-engine docker docker.io docker-ce docker-ce-cli containerd runc
 						sudo apt-get autoremove -y --purge docker-engine docker docker.io docker-ce
 						sudo rm -rf /var/lib/docker /etc/docker
 						sudo rm /etc/apparmor.d/docker
@@ -147,7 +147,7 @@ docker_install()
 						sudo rm -rf /var/run/docker.sock
 						echo "30"; sleep 1
 						#uninstall previous versions
-						sudo apt-get remove docker docker-engine docker.io containerd runc
+						sudo rm -r /home/pi/iothoneypot/docker-cowrie
     	fi
 		echo "40"; sleep 1
 		#Download docker installer script
