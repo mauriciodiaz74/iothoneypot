@@ -133,13 +133,23 @@ docker_install()
 		#Check if docker is installed
 		if [ -x "$(command -v docker)" ]
 			then
-    				#Stop and remove all docker containers images and volumes
-    				sudo docker system prune -af
-						echo "10"; sleep 1
+    				#Stop and remove all docker containers images and volumes, and uninstall previous docker versions
+						sudo docker container stop $(sudo docker container ls -aq)
+						sudo docker container prune --force
+						sudo docker image prune --all --force
+						sudo docker volume prune --force
+    				sudo docker system prune --all --force --volumes
+						sudo apt-get purge -y docker-engine docker docker.io docker-ce docker-ce-cli
+						sudo apt-get autoremove -y --purge docker-engine docker docker.io docker-ce
+						sudo rm -rf /var/lib/docker /etc/docker
+						sudo rm /etc/apparmor.d/docker
+						sudo groupdel docker
+						sudo rm -rf /var/run/docker.sock
+						echo "30"; sleep 1
 						#uninstall previous versions
 						sudo apt-get remove docker docker-engine docker.io containerd runc
     	fi
-		echo "30"; sleep 1
+		echo "40"; sleep 1
 		#Download docker installer script
 		curl -fsSL https://get.docker.com -o get-docker.sh
 		echo "50"; sleep 1
@@ -187,7 +197,7 @@ cowrie_install()
 		cd ..
 		echo "90";
 		#Run cowrie in the background and in a container listen in port 22, and redirected to port 2222 inside container
-		sudo docker run -p 22:2222/tcp cowrie &
+		sudo docker run -p 22:2222/tcp cowrie > output.log 2>&1 &
 	) |
 	(
 		zenity 	--progress \
