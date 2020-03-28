@@ -57,10 +57,10 @@ check_error()
 {
 	if [ "$?" -ne 0 ]
 		then
-       			zenity 	--error \
-			      				--width=300 \
-										--height=50 \
-       							--text="$1. Operation canceled."
+       			zenity --error \
+			      			 --width=300 \
+									 --height=50 \
+       						 --text="$1. Operation canceled."
 						exit 1
 	fi
 }
@@ -77,12 +77,12 @@ activate_ssh()
 		systemctl start ssh
 	) |
 	(
-		zenity 	--progress \
-       			--width=300 \
-       			--height=100 \
-       			--title="SSH service" \
-       			--text="Enabling and starting SSH service..." \
-       			--percentage=0
+		zenity --progress \
+       		 --width=300 \
+       		 --height=100 \
+       		 --title="SSH service" \
+       		 --text="Enabling and starting SSH service..." \
+       		 --percentage=0
 		check_error 'SSH activation'
 	)
 }
@@ -116,12 +116,12 @@ update_upgrade()
 		echo "90";
 	) |
 	(
-		zenity 	--progress \
-       			--width=300 \
-       			--height=100 \
-       			--title="Updating" \
-       			--text="Updating and upgrading system..." \
-       			--percentage=0
+		zenity --progress \
+       		 --width=300 \
+       		 --height=100 \
+       		 --title="Updating" \
+       		 --text="Updating and upgrading system..." \
+       		 --percentage=0
 		check_error 'Upgrade'
 	)
 }
@@ -135,16 +135,18 @@ docker_install()
 			then
     				#Stop and remove all docker containers images and volumes, and uninstall previous docker versions
 						sudo docker container stop $(sudo docker container ls -aq)
+						echo "10"; sleep 1
 						sudo docker container prune --force
 						sudo docker image prune --all --force
     				sudo docker system prune --all --force --volumes
+						echo "20"; sleep 1
 						sudo apt-get purge -y docker-engine docker docker.io docker-ce docker-ce-cli containerd runc
 						sudo apt-get autoremove -y --purge docker-engine docker docker.io docker-ce
+						echo "30"; sleep 1
 						sudo rm -rf /var/lib/docker /etc/docker
 						sudo rm /etc/apparmor.d/docker
 						sudo rm -rf /var/run/docker.sock
 						sudo groupdel docker
-						echo "30"; sleep 1
     	fi
 		echo "40"; sleep 1
 		#Download docker installer script
@@ -160,12 +162,12 @@ docker_install()
 		sudo systemctl enable docker
 	) |
 	(
-		zenity 	--progress \
-       			--width=300 \
-       			--height=100 \
-       			--title="Docker installation" \
-       			--text="Installing and configuring Docker..." \
-       			--percentage=0
+		zenity --progress \
+       		 --width=300 \
+       		 --height=100 \
+       		 --title="Docker installation" \
+       		 --text="Installing and configuring Docker..." \
+       		 --percentage=0
 		check_error 'Docker'
 	)
 	#Run Docker hello-world to test docker installation
@@ -185,24 +187,25 @@ cowrie_install()
 		#Install pre-requirements
 		sudo apt install apt-utils
 		echo "15"; sleep 1
+		sudo pip install -U setuptools
+		echo "20"; sleep 1
 		#Download Cowrie
 		sudo git clone https://github.com/cowrie/docker-cowrie.git
-		echo "20"; sleep 1
+		echo "30"; sleep 1
 		#Compile cowrie
 		sudo docker build -t cowrie /home/pi/iothoneypot/docker-cowrie
-		echo "50"; sleep 1
-		cd /home/pi/iothoneypot
 		echo "90";
 		#Run cowrie in the background and in a container listen in port 22, and redirected to port 2222 inside container
-		sudo docker run -p 22:2222/tcp cowrie > output.log 2>&1 &
+		#sudo docker run -p 22:2222/tcp cowrie > output.log 2>&1 &
+		sudo sh -c "docker run -p 22:2222/tcp cowrie > output.log 2>&1 &"
 	) |
 	(
-		zenity 	--progress \
-       			--width=500 \
-       			--height=100 \
-       			--title="Cowrie installation" \
-       			--text="Installing Cowrie. Patience, this could take 45 min. approx." \
-       			--percentage=0
+		zenity --progress \
+       		 --width=500 \
+       		 --height=100 \
+       		 --title="Cowrie installation" \
+       		 --text="Installing Cowrie. Patience, this could take 45 min. approx." \
+       		 --percentage=0
 		check_error 'Cowrie installation'
 	)
 }
