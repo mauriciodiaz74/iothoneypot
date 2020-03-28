@@ -137,14 +137,13 @@ docker_install()
 						sudo docker container stop $(sudo docker container ls -aq)
 						sudo docker container prune --force
 						sudo docker image prune --all --force
-						sudo docker volume prune --force
     				sudo docker system prune --all --force --volumes
 						sudo apt-get purge -y docker-engine docker docker.io docker-ce docker-ce-cli containerd runc
 						sudo apt-get autoremove -y --purge docker-engine docker docker.io docker-ce
 						sudo rm -rf /var/lib/docker /etc/docker
 						sudo rm /etc/apparmor.d/docker
-						sudo groupdel docker
 						sudo rm -rf /var/run/docker.sock
+						sudo groupdel docker
 						echo "30"; sleep 1
     	fi
 		echo "40"; sleep 1
