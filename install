@@ -1,5 +1,6 @@
 #!/bin/bash
 
+#19-05-20_17:48
 #Variables
 FILE=`dirname $0`/README
 MACHINE_TYPE=`uname -m`
@@ -277,13 +278,13 @@ installation()
 	update_upgrade
 
 	#Install and configure Docker
-	docker_install
+	#docker_install
 
 	#Install Cowrie
-	cowrie_install
+	#cowrie_install
 
 	#Cowrie, special configurations
-	cowrie_config
+	#cowrie_config
 }
 
 installation_stop()
