@@ -188,6 +188,7 @@ cowrie_install()
 		sudo apt install apt-utils
 		echo "15"; sleep 1
 		sudo pip install -U setuptools
+		sudo make pip install --upgrade pip setuptools wheel
 		echo "20"; sleep 1
 		#Download Cowrie
 		sudo git clone https://github.com/cowrie/docker-cowrie.git
