@@ -332,7 +332,7 @@ logging
 
 #First, check if the script was run as sudo, and if platform is 64 bit. If not, exit.
 check_sudo
-check_platform
+#check_platform
 
 #Show the initial warning with general info and considerations of using the script
 initial_warning
