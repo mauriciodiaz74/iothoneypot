@@ -190,23 +190,24 @@ cowrie_install()
 		echo "10"; sleep 1
 		#Install pre-requirements
 		sudo apt install apt-utils
-		echo "15"; sleep 1
-		#sudo pip install -U setuptools
-		#MD: -> Removed. Testing without setuptools
-		#sudo make pip install --upgrade pip setuptools wheel
-		#MD: -> Removed. Testing without setuptools wheel
 		echo "20"; sleep 1
+		sudo apt-get install libpcap-dev libpq-dev
+		echo "30"; sleep 1
+		sudo apt-get install python-wheel-common
+		pip install pycparser
+		python -m pip install --upgrade pip setuptools wheel
+		echo "40"; sleep 1
 		#Download Cowrie
 		sudo git clone https://github.com/cowrie/docker-cowrie.git
-		echo "30"; sleep 1
+		echo "50"; sleep 1
 		#Compile cowrie
 		sudo docker build -t cowrie /home/pi/iothoneypot/docker-cowrie
 		echo "90";
 		#Run cowrie in the background and in a container listen in port 22, and redirected to port 2222 inside container
     #MD: -> Try one of the next 3. If the last one works, use that.
 		#sudo docker run --publish 22:2222/tcp cowrie > output.log 2>&1 &
-		sudo sh -c "docker run --publish 22:2222/tcp cowrie > output.log 2>&1 &"
-		#sudo sh -c "docker run --publish 22:2222/tcp cowrie > /var/log/cowrie_run.log 2>&1 &"
+		#sudo sh -c "docker run --publish 22:2222/tcp cowrie > output.log 2>&1 &"
+		sudo sh -c "docker run --publish 22:2222/tcp cowrie > /var/log/cowrie_run.log 2>&1 &"
 	) |
 	(
 		zenity --progress \
@@ -239,8 +240,8 @@ cowrie_config()
 		sed -i 's/root:x:!\/honeypot.*/root:x:!admin/' etc/userdb.txt
 		sed -i 's/root:x:\*.*/root:x:toor/g' etc/userdb.txt
 		#Edit cowrie config file.
-		#...to enable TELNET honeypot, port 23:
-		sed -i '/# Enable Telnet support, disabled by default/{n;s/enable.*/enabled = true/}' etc/cowrie.cfg
+		#...to enable TELNET honeypot, port 23, uncomment the next line:
+		#sed -i '/# Enable Telnet support, disabled by default/{n;s/enable.*/enabled = true/}' etc/cowrie.cfg
 		echo "50"; sleep 1
 		#...to enable SPLUNK forwarding in output_splunk section:
 		#Line 1. Remove the # from the output_splunk line.
@@ -249,10 +250,10 @@ cowrie_config()
 		sed -i '/output_splunk/{n;s/#enabled.*/enabled = true/}' etc/cowrie.cfg
 		echo "60"; sleep 1
 		#Line 3. Change localhost to the remote server address where Splunk is installed and running.
-		sed -i '/output_splunk/{n;n;s/#url = https:\/\/localhost:8088\/services.*$/url = https:\/\/34.244.181.181:8088\/services\/collector\/event/}' etc/cowrie.cfg
+		sed -i '/output_splunk/{n;n;s/#url = https:\/\/localhost:8088\/services.*$/url = https:\/\/34.243.135.52:8088\/services\/collector\/event/}' etc/cowrie.cfg
 		echo "70"; sleep 1
 		#Line 4. Update the Token value from the HTTP event collector in Splunk remote server.
-		sed -i '/output_splunk/{n;n;n;s/#token = 6A0EA6C6.*$/token = 78774d21-5d4d-40ba-a07b-98ad6ac27529/}' etc/cowrie.cfg
+		sed -i '/output_splunk/{n;n;n;s/#token = 6A0EA6C6.*$/token = e34313c8-05ad-4507-b507-4442c29c0a9f/}' etc/cowrie.cfg
 		echo "80"; sleep
 		#Lines 5, 6 and 7. Remove the #
 		sed -i '/output_splunk/{n;n;n;n;s/#index.*/index = cowrie/}' etc/cowrie.cfg
@@ -267,9 +268,18 @@ cowrie_config()
        			--width=500 \
        			--height=100 \
        			--title="Cowrie configuration" \
-       			--text="Configuring Cowrie. This include enabling Telnet honeypot" \
+       			--text="Configuring Cowrie." \
        			--percentage=0
 		check_error 'Cowrie configuration'
+	)
+}
+
+RIOT_iot_port()
+{
+	IOT_PORT=$(zenity --scale --width=300 --title="First IoT device port" --text="Please select the port where one of the IoT devices will be listening" --min-value=1000 --max-value=65535 --value=1000 --step=1)
+		if [ "$?" = 1 ]
+			then RIOT_iot_port
+		fi
 	)
 }
 
@@ -279,35 +289,57 @@ RIOT_install()
 		echo "5"; sleep 1
 		if [ -d /home/pi/iothoneypot/docker-cowrie ]
 			then
-				#Remove docker-cowrie folder
+				#Remove docker-riot folder
 				sudo rm -r /home/pi/iothoneypot/docker-cowrie
 		fi
 		echo "10"; sleep 1
-		#Install pre-requirements
-		sudo apt install apt-utils
-		echo "15"; sleep 1
-		sudo pip install -U setuptools
-		sudo make pip install --upgrade pip setuptools wheel
-		echo "20"; sleep 1
-		#Download Cowrie
-		sudo git clone https://github.com/cowrie/docker-cowrie.git
+		#Download RIOT (docker version)
+		sudo docker pull riot/riotbuild
 		echo "30"; sleep 1
 		#Compile cowrie
-		sudo docker build -t cowrie /home/pi/iothoneypot/docker-cowrie
+		sudo make BUILD_IN_DOCKER=1 DOCKER="sudo docker"
 		echo "90";
 		#Run cowrie in the background and in a container listen in port 22, and redirected to port 2222 inside container
 		#sudo docker run --publish 22:2222/tcp cowrie > output.log 2>&1 &
-		sudo sh -c "docker run --publish 22:9999/tcp riot > riot_run.log 2>&1 &"
-		#sudo sh -c "docker run --publish 22:9999/tcp riot > /var/log/riot_run.log 2>&1 &"
+		#sudo sh -c "docker run --publish 22:9999/tcp riot > riot_run.log 2>&1 &"
+		sudo sh -c "docker run --publish $IOT_PORT:9999/tcp riot > /var/log/riot_run.log 2>&1 &"
 	) |
 	(
 		zenity --progress \
        		 --width=500 \
        		 --height=100 \
-       		 --title="Cowrie installation" \
-       		 --text="Installing Cowrie. Patience, this could take 45 min. approx." \
+       		 --title="RIOT installation" \
+       		 --text="Installing RIOT" \
        		 --percentage=0
-		check_error 'Cowrie installation'
+		check_error 'RIOT installation'
+	)
+}
+
+RIOT_iot_devices()
+{
+	(
+		echo "10"; sleep 1
+		#
+		echo "20"; sleep 1
+		#Get the container ID from RIOT instance
+		containerid2=$(sudo docker ps | sed -n '2 p' | sed 's/^\(............\).*/\1/;q')
+		echo "30"; sleep 1
+		#Connect to a bash session inside RIOT docker instance
+		sudo docker exec -it $containerid2 /bin/bash
+		echo "40"; sleep 1
+		#
+		exit
+		sudo docker restart $containerid2
+		echo "90";
+	) |
+	(
+		zenity 	--progress \
+       			--width=500 \
+       			--height=100 \
+       			--title="IoT devices configuration" \
+       			--text="Installing and configuring IoT Virtual Devices" \
+       			--percentage=0
+		check_error 'IoT devices Installation'
 	)
 }
 
@@ -331,8 +363,14 @@ installation()
 	#Cowrie, special configurations
 	#cowrie_config
 
+	#Get port for IoT devices
+	RIOT_iot_port
+
 	#RIOT installation
 	RIOT_install
+
+	#RIOT configuration for IoT Devices
+	#RIOT_iot_devices
 }
 
 installation_stop()
