@@ -385,19 +385,19 @@ RIOT_install()
 		fi
 		echo "10"; sleep 1
 		#Download RIOT (docker version)
-		sudo docker pull riot/riotbuild
+		#sudo docker pull riot/riotbuild
 		echo "40"; sleep 1
 		#clone RIOT github
 		git clone https://github.com/RIOT-OS/RIOT.git
 		echo "70"; sleep 1
 		#Compile cowrie
 		cd RIOT
-		sudo make BUILD_IN_DOCKER=1 DOCKER="sudo docker"
+		#Start RIOT docker version. ARM toolchain is missing. If found, install and run the next line.
+		#sudo make BUILD_IN_DOCKER=1 DOCKER="sudo docker"
 		echo "90";
+		echo "IoT port is: $IOT_PORT"
 		#Run RIOT in the background and in a container listen in USER selected PORT, and redirected to port 9999 inside container
-		#sudo docker run --publish 22:2222/tcp cowrie > output.log 2>&1 &
-		#sudo sh -c "docker run --publish 22:9999/tcp riot > riot_run.log 2>&1 &"
-		sudo sh -c "docker run --publish $IOT_PORT:9999/tcp riot > /var/log/riot_run.log 2>&1 &"
+		#sudo sh -c "docker run --publish $IOT_PORT:9999/tcp riot > /var/log/riot_run.log 2>&1 &"
 	) |
 	(
 		zenity --progress \
