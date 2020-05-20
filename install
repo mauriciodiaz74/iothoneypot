@@ -185,13 +185,20 @@ cowrie_install()
 				sudo rm -Rf /home/pi/iothoneypot/docker-cowrie
 		fi
 		echo "10"; sleep 1
+		#alternative solution (jheredia cowrie docker)
+		#sudo docker pull jtorresheredia/cowrie-arm
+		#sudo docker run -d -p 22:2222/tcp jtorresheredia/cowrie-arm
+		#Normal instalation ->
 		#Install pre-requirements
 		sudo apt install apt-utils
 		echo "20"; sleep 1
 		sudo apt-get install -y git apt-utils python-virtualenv libssl-dev libffi-dev build-essential libpython-dev python2.7-minimal authbind libpcap-dev libpq-dev python3-wheel python-wheel-common python3-setuptools
 		echo "60"; sleep 1
-		pip3 install pycparser setuptools pendulum
-		python -m pip install --upgrade pip setuptools wheel
+		pip install --upgrade pip
+		pip install --upgrade -r /home/pi/iothoneypot/requirements.txt
+		#Uncomment the next 2 lines only if cowrie docker installation fails.
+		#pip3 install pycparser setuptools pendulum
+		#python -m pip install --upgrade pip setuptools wheel
 		echo "70"; sleep 1
 		#Download Cowrie
 		sudo git clone https://github.com/cowrie/docker-cowrie.git
@@ -203,7 +210,7 @@ cowrie_install()
     #MD: -> Try one of the next 3. If the last one works, use that.
 		#sudo docker run --publish 22:2222/tcp cowrie > output.log 2>&1 &
 		#sudo sh -c "docker run --publish 22:2222/tcp cowrie > output.log 2>&1 &"
-		sudo sh -c "docker run --publish 22:2222/tcp cowrie > /var/log/cowrie_run.log 2>&1 &"
+		sudo docker run -d --publish 22:2222/tcp cowrie
 	) |
 	(
 		zenity --progress \
@@ -379,8 +386,12 @@ RIOT_install()
 		echo "10"; sleep 1
 		#Download RIOT (docker version)
 		sudo docker pull riot/riotbuild
-		echo "30"; sleep 1
+		echo "40"; sleep 1
+		#clone RIOT github
+		git clone https://github.com/RIOT-OS/RIOT.git
+		echo "70"; sleep 1
 		#Compile cowrie
+		cd RIOT
 		sudo make BUILD_IN_DOCKER=1 DOCKER="sudo docker"
 		echo "90";
 		#Run RIOT in the background and in a container listen in USER selected PORT, and redirected to port 9999 inside container
@@ -406,7 +417,7 @@ RIOT_iot_devices()
 		#
 		echo "20"; sleep 1
 		#Get the container ID from RIOT instance
-		containerid2=$(sudo docker ps | sed -n '2 p' | sed 's/^\(............\).*/\1/;q')
+		containerid2=$(sudo docker ps | sed -n '3 p' | sed 's/^\(............\).*/\1/;q')
 		echo "30"; sleep 1
 		#Connect to a bash session inside RIOT docker instance
 		sudo docker exec -it $containerid2 /bin/bash
@@ -442,10 +453,10 @@ installation()
 	docker_install
 
 	#Install Cowrie - Docker version
-	#cowrie_install
+	cowrie_install
 
 	#Cowrie, special configurations - Docker version
-	#cowrie_config
+	cowrie_config
 
 	#Install Cowrie - no Docker version
 	#cowrie_install_no_docker
