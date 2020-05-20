@@ -15,4 +15,7 @@ This installation involves changing some of the system's parameters and the inst
 - The RIOT microkernel operating system will be installed. Through this operating system, virtual IoT devices will be enabled, with real operation. This implies that it is possible to interact with them through various commands. Each virtual IoT device has a virtualized communication port with real hardware address, so it is possible to send messages between them.
 - These IoT devices will be accessible through a special port that will also be visible to port scans made to the Raspberry Pi.
 
-Installation Log: /var/log/iothoneypot_install.log
+Installation Logs:
+/var/log/iothoneypot_install.log
+/var/log/cowrie_run.log
+/var/log/riot_run.log

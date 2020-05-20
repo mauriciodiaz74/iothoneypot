@@ -107,13 +107,16 @@ modify_ssh_port()
 update_upgrade()
 {
 	(
-		echo "10"; sleep 1
+		echo "50"; sleep 1
 		#Update system repositories
 		sudo apt-get update
-		echo "30"; sleep 1
-		echo "60"; sleep 1
+		#echo "30"; sleep 1
+		#MD: -> Removed. Testing without upgrade.
+		#echo "60"; sleep 1
+		#MD: -> Removed. Testing without upgrade.
 		#Upgrade packages
-		sudo apt-get -y upgrade
+		#sudo apt-get -y upgrade
+		#MD: -> Removed. Testing without upgrade.
 		echo "90";
 	) |
 	(
@@ -121,9 +124,9 @@ update_upgrade()
        		 --width=300 \
        		 --height=100 \
        		 --title="Updating" \
-       		 --text="Updating and upgrading system..." \
+       		 --text="Updating repositories..." \
        		 --percentage=0
-		check_error 'Upgrade'
+		check_error 'Update'
 	)
 }
 
@@ -144,9 +147,9 @@ docker_install()
 						sudo apt-get purge -y docker-engine docker docker.io docker-ce docker-ce-cli containerd runc
 						sudo apt-get autoremove -y --purge docker-engine docker docker.io docker-ce
 						echo "30"; sleep 1
-						sudo rm -rf /var/lib/docker /etc/docker
-						sudo rm /etc/apparmor.d/docker
-						sudo rm -rf /var/run/docker.sock
+						sudo rm -Rf /var/lib/docker /etc/docker
+						sudo rm -Rf /etc/apparmor.d/docker
+						sudo rm -Rf /var/run/docker.sock
 						sudo groupdel docker
     	fi
 		echo "40"; sleep 1
@@ -182,14 +185,16 @@ cowrie_install()
 		if [ -d /home/pi/iothoneypot/docker-cowrie ]
 			then
 				#Remove docker-cowrie folder
-				sudo rm -r /home/pi/iothoneypot/docker-cowrie
+				sudo rm -Rf /home/pi/iothoneypot/docker-cowrie
 		fi
 		echo "10"; sleep 1
 		#Install pre-requirements
 		sudo apt install apt-utils
 		echo "15"; sleep 1
-		sudo pip install -U setuptools
-		sudo make pip install --upgrade pip setuptools wheel
+		#sudo pip install -U setuptools
+		#MD: -> Removed. Testing without setuptools
+		#sudo make pip install --upgrade pip setuptools wheel
+		#MD: -> Removed. Testing without setuptools wheel
 		echo "20"; sleep 1
 		#Download Cowrie
 		sudo git clone https://github.com/cowrie/docker-cowrie.git
@@ -198,8 +203,10 @@ cowrie_install()
 		sudo docker build -t cowrie /home/pi/iothoneypot/docker-cowrie
 		echo "90";
 		#Run cowrie in the background and in a container listen in port 22, and redirected to port 2222 inside container
-		#sudo docker run -p 22:2222/tcp cowrie > output.log 2>&1 &
-		sudo sh -c "docker run -p 22:2222/tcp cowrie > output.log 2>&1 &"
+    #MD: -> Try one of the next 3. If the last one works, use that.
+		#sudo docker run --publish 22:2222/tcp cowrie > output.log 2>&1 &
+		sudo sh -c "docker run --publish 22:2222/tcp cowrie > output.log 2>&1 &"
+		#sudo sh -c "docker run --publish 22:2222/tcp cowrie > /var/log/cowrie_run.log 2>&1 &"
 	) |
 	(
 		zenity --progress \
@@ -266,6 +273,44 @@ cowrie_config()
 	)
 }
 
+RIOT_install()
+{
+	(
+		echo "5"; sleep 1
+		if [ -d /home/pi/iothoneypot/docker-cowrie ]
+			then
+				#Remove docker-cowrie folder
+				sudo rm -r /home/pi/iothoneypot/docker-cowrie
+		fi
+		echo "10"; sleep 1
+		#Install pre-requirements
+		sudo apt install apt-utils
+		echo "15"; sleep 1
+		sudo pip install -U setuptools
+		sudo make pip install --upgrade pip setuptools wheel
+		echo "20"; sleep 1
+		#Download Cowrie
+		sudo git clone https://github.com/cowrie/docker-cowrie.git
+		echo "30"; sleep 1
+		#Compile cowrie
+		sudo docker build -t cowrie /home/pi/iothoneypot/docker-cowrie
+		echo "90";
+		#Run cowrie in the background and in a container listen in port 22, and redirected to port 2222 inside container
+		#sudo docker run --publish 22:2222/tcp cowrie > output.log 2>&1 &
+		sudo sh -c "docker run --publish 22:9999/tcp riot > riot_run.log 2>&1 &"
+		#sudo sh -c "docker run --publish 22:9999/tcp riot > /var/log/riot_run.log 2>&1 &"
+	) |
+	(
+		zenity --progress \
+       		 --width=500 \
+       		 --height=100 \
+       		 --title="Cowrie installation" \
+       		 --text="Installing Cowrie. Patience, this could take 45 min. approx." \
+       		 --percentage=0
+		check_error 'Cowrie installation'
+	)
+}
+
 installation()
 {
 	#Raspberry Pi comes with SSH port deactivated by default
@@ -285,6 +330,9 @@ installation()
 
 	#Cowrie, special configurations
 	#cowrie_config
+
+	#RIOT installation
+	RIOT_install
 }
 
 installation_stop()
