@@ -5,7 +5,8 @@ APPLICATION = IoT_Honeypot
 BOARD ?= native
 
 # This has to be the absolute path to the RIOT base directory:
-RIOTBASE ?= $(CURDIR)/../..
+RIOTBASE ?= $(CURDIR)/..
+#Modified by MD to /.. (before was /../..). Because IoT_honeypot dir will be in RIOT/ (no RIOT/examples)
 
 # Uncomment these lines if you want to use platform support from external
 # repositories:
