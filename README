@@ -17,5 +17,3 @@ This installation involves changing some of the system's parameters and the inst
 
 Installation Logs:
 /var/log/iothoneypot_install.log
-/var/log/cowrie_run.log
-/var/log/riot_run.log
