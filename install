@@ -378,12 +378,6 @@ RIOT_install()
 {
 	(
 		echo "5"; sleep 1
-		if [ -d /home/pi/iothoneypot/docker-cowrie ]
-			then
-				#Remove docker-riot folder
-				sudo rm -r /home/pi/iothoneypot/docker-cowrie
-		fi
-		echo "10"; sleep 1
 		#Download RIOT (docker version)
 		#sudo docker pull riot/riotbuild
 		echo "40"; sleep 1
