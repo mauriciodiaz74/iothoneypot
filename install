@@ -376,7 +376,7 @@ installation_finished()
 {
         zenity 	--info \
 								--title="Finished!" \
-								--text="Now. Docker is working, SSH honeypot working. IoT honeypot working with 2 Iot Devices running. One of them has the port $IOT_PORT. Instalon successfully finished." \
+								--text="Now. Docker is working, SSH honeypot working. IoT honeypot working with 2 Iot Devices running. One of them has the port $IOT_PORT. Installation successfully finished." \
 								--width=300 \
 								--height=200
 }
@@ -416,6 +416,7 @@ initial_warning
 #Proccess completed successfully
 installation_finished
 
+echo
 echo "******************************************************************************************"
 echo "Done!"
 echo "The Honeypots are running in the background"
@@ -432,8 +433,9 @@ echo "Once executed tap0 or tap1 or both, you will enter into the OS of the virt
 echo "Once inside, type info (info about the device), or help for more Commands"
 echo "more info in the file: /home/pi/iothoneypot/RIOT/IoT_Honeypot/README.md"
 echo "------------------------------------------------------------------------------------------"
-echo "To continue, press ENTER. Once you press it this terminal will close. To enter the above commands (tap0 or tap1), open a new terminal."
-read -n 1 -s -r -p "Press any key to continue"
+echo "To enter the above commands (tap0 or tap1), open a NEW terminal (Won't work in this one)."
+echo "------------------------------------------------------------------------------------------"
+echo "******************************************************************************************"
 exit
 
 #######################################################################################################
