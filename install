@@ -220,7 +220,7 @@ cowrie_ARM_config()
 		sed -i '/output_splunk/{n;n;n;n;n;s/#sourcetype.*/sourcetype = cowrie/}' etc/cowrie.cfg
 		sed -i '/output_splunk/{n;n;n;n;n;n;s/#source.*/source = cowrie/}' etc/cowrie.cfg
 		exit
-		docker restart $containerid
+		echo "restarting container:"; docker restart $containerid
 		sleep 15
 	)
 }
