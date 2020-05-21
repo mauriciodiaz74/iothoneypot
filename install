@@ -189,17 +189,15 @@ cowrie_ARM_install()
 cowrie_ARM_config()
 {
 	(
-		echo "10"; sleep 1
 		#Install adn enable telnet
 		##sudo apt-get -y install telnetd
 		##sudo /etc/init.d/openbsd-inetd restart
-		echo "20"; sleep 1
 		#Get the container ID from cowrie instance
-		containerid=$(docker ps | sed -n '2 p' | sed 's/^\(............\).*/\1/;q')
-		echo "30"; sleep 3
+		echo "Getting container ID:"; containerid=$(docker ps | sed -n '2 p' | sed 's/^\(............\).*/\1/;q')
+		sleep 3
 		#Connect to a bash session inside cowrie docker instance
-		docker exec -it $containerid /bin/bash
-		echo "40"; sleep 5
+		echo "Getting a bash insider container:"; docker exec -it $containerid /bin/bash
+		sleep 5
 		# Backup cowrie.cfg.dist to cowrie.cfg. The latter takes precedence over the other. Rename userdb to .txt for ssh honeypot access user/passwords.
 		cp etc/cowrie.cfg.dist etc/cowrie.cfg && mv etc/userdb.example etc/userdb.txt
 		# Edit userdb.txt and change some too much obvious passwords.
@@ -208,19 +206,15 @@ cowrie_ARM_config()
 		#Edit cowrie config file.
 		#...to enable TELNET honeypot, port 23, uncomment the next line:
 		#sed -i '/# Enable Telnet support, disabled by default/{n;s/enable.*/enabled = true/}' etc/cowrie.cfg
-		echo "50"; sleep 1
 		#...to enable SPLUNK forwarding in output_splunk section:
 		#Line 1. Remove the # from the output_splunk line.
 		sed -i 's/#\[output_splunk\]/\[output_splunk\]/' etc/cowrie.cfg
 		#Line 2. Enable Splunk
 		sed -i '/output_splunk/{n;s/#enabled.*/enabled = true/}' etc/cowrie.cfg
-		echo "60"; sleep 1
 		#Line 3. Change localhost to the remote server address where Splunk is installed and running.
 		sed -i '/output_splunk/{n;n;s/#url = https:\/\/localhost:8088\/services.*$/url = https:\/\/34.243.135.52:8088\/services\/collector\/event/}' etc/cowrie.cfg
-		echo "70"; sleep 1
 		#Line 4. Update the Token value from the HTTP event collector in Splunk remote server.
 		sed -i '/output_splunk/{n;n;n;s/#token = 6A0EA6C6.*$/token = e34313c8-05ad-4507-b507-4442c29c0a9f/}' etc/cowrie.cfg
-		echo "80"; sleep 1
 		#Lines 5, 6 and 7. Remove the #
 		sed -i '/output_splunk/{n;n;n;n;s/#index.*/index = cowrie/}' etc/cowrie.cfg
 		sed -i '/output_splunk/{n;n;n;n;n;s/#sourcetype.*/sourcetype = cowrie/}' etc/cowrie.cfg
@@ -228,16 +222,6 @@ cowrie_ARM_config()
 		exit
 		docker restart $containerid
 		sleep 15
-		echo "90";
-	) |
-	(
-		zenity 	--progress \
-       			--width=500 \
-       			--height=100 \
-       			--title="Cowrie configuration" \
-       			--text="Configuring Cowrie." \
-       			--percentage=0
-		check_error 'Cowrie configuration'
 	)
 }
 
