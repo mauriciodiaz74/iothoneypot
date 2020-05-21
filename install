@@ -130,7 +130,7 @@ update_upgrade()
 docker_install()
 {
 	(
-		echo "0"; sleep 1
+		echo "10"; sleep 1
 		#Check if docker is installed
 		if [ -x "$(command -v docker)" ]
 			then
@@ -182,7 +182,7 @@ cowrie_install()
 		#Download cowrie ARM version (jheredia cowrie docker)
 		sudo docker pull jtorresheredia/cowrie-arm
 		echo "90"; sleep 1
-		sudo docker run -d -p 22:2222/tcp jtorresheredia/cowrie-arm
+		sudo docker run -d -p 22:2222/tcp jtorresheredia/cowrie-arm &
 		#Cowrie x86 installation ->
 		#Install pre-requirements
 		#sudo apt install apt-utils
@@ -284,7 +284,13 @@ RIOT_iot_port()
 RIOT_install()
 {
 	(
-		echo "5"; sleep 1
+		echo "10"; sleep 1
+		if [ -d /home/pi/iothoneypot/RIOT ]
+			then
+				#Remove RIOT folder
+				sudo rm -Rf /home/pi/iothoneypot/RIOT
+			fi
+		echo "20"; sleep 1
 		#Download RIOT (docker version)
 		#sudo docker pull riot/riotbuild
 		echo "40"; sleep 1
@@ -335,6 +341,11 @@ RIOT_iot_devices()
 		#
 		#exit
 		#sudo docker restart $containerid2
+		#ADD aliases to Bashrc to fast execution of tap devices (IoT devices):
+		#Backup .Bashrc
+		cp /home/pi/.bashrc /home/pi/.bashrc.bak
+		echo "alias tap0='/home/pi/iothoneypot/RIOT/IoT_Honeypot/bin/native/./IoT_Honeypot.elf tap0'" >> .bashrc
+		echo "alias tap1='/home/pi/iothoneypot/RIOT/IoT_Honeypot/bin/native/./IoT_Honeypot.elf tap1'" >> .bashrc
 		echo "90";
 	) |
 	(
@@ -438,12 +449,19 @@ initial_warning
 installation_finished
 echo
 echo Done!
-echo The Honeypot is running in the background
+echo The Honeypots are running in the background
 echo
 echo Check locally if SSH port is open with: nmap 127.0.0.1
 echo Check locally if SSH port is accepting connections: ssh pi@127.0.0.1
 echo Check from other device scanning the network and trying to connect to SSH an Telnet ports.
 echo
+echo Check if 2 IoT devices are running, with these commands:
+echo tap0
+echo tap1
+echo tap0 activates an interface of one virtual IoT device. The same with tap1.
+echo Once executed tap0 or tap1 or both, you will enter into the OS of the virtual IoT device.
+echo Once inside, type info (info about the device), or help for more Commands
+echo more info in the file: /home/pi/iothoneypot/RIOT/IoT_Honeypot/README.md
 exit 0
 
 #######################################################################################################
