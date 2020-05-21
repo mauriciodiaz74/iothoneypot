@@ -66,6 +66,15 @@ check_error()
 	fi
 }
 
+check_previous_install()
+{		echo "10"; sleep 1
+		if [ -d /home/pi/iothoneypot ]
+			then
+				#Remove RIOT folder
+				sudo rm -Rf /home/pi/iothoneypot
+			fi
+}
+
 activate_ssh()
 {
 	(
@@ -438,6 +447,7 @@ initial_warning()
 #First, check if the script was run as sudo, and if platform is 64 bit. If not, exit.
 check_sudo
 check_platform
+check_previous_install
 
 #Installation LOG
 logging
