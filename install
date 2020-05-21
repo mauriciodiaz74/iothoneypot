@@ -178,11 +178,11 @@ docker_install()
 cowrie_ARM_install()
 {
 	(
-		#echo "10"; sleep 1
+		echo "10"; sleep 1
 		#Download cowrie ARM version (jheredia cowrie docker)
-		echo "debug docker pull:"; docker pull jtorresheredia/cowrie-arm
+		docker pull jtorresheredia/cowrie-arm
 		echo "90"; sleep 1
-		echo "debug docker run:"; docker run -d -p 22:2222/tcp jtorresheredia/cowrie-arm &
+		docker run -d -p 22:2222/tcp jtorresheredia/cowrie-arm &
 		#Cowrie x86 installation ->
 		#Install pre-requirements
 		#sudo apt install apt-utils
@@ -205,16 +205,16 @@ cowrie_ARM_install()
 		#sudo docker run --publish 22:2222/tcp cowrie > output.log 2>&1 &
 		#sudo sh -c "docker run --publish 22:2222/tcp cowrie > output.log 2>&1 &"
 		#sudo docker run -d --publish 22:2222/tcp cowrie
-	) #|
-	#(
-	#	zenity --progress \
-  #     		 --width=500 \
-  #     		 --height=100 \
-  #     		 --title="Cowrie installation" \
-  #     		 --text="Installing Cowrie. Patience, this could take 45 min. approx." \
-  #     		 --percentage=0
-	#	check_error 'Cowrie installation'
-	#)
+	) |
+	(
+		zenity --progress \
+       		 --width=500 \
+       		 --height=100 \
+       		 --title="Cowrie installation" \
+       		 --text="Installing Cowrie. Patience, this could take 30 min. approx." \
+       		 --percentage=0
+		check_error 'Cowrie installation'
+	)
 }
 
 cowrie_ARM_config()
@@ -226,10 +226,10 @@ cowrie_ARM_config()
 		##sudo /etc/init.d/openbsd-inetd restart
 		echo "20"; sleep 1
 		#Get the container ID from cowrie instance
-		containerid=$(sudo docker ps | sed -n '2 p' | sed 's/^\(............\).*/\1/;q')
+		containerid=$(docker ps | sed -n '2 p' | sed 's/^\(............\).*/\1/;q')
 		echo "30"; sleep 1
 		#Connect to a bash session inside cowrie docker instance
-		sudo docker exec -it $containerid /bin/bash
+		docker exec -it $containerid /bin/bash
 		echo "40"; sleep 1
 		# Backup cowrie.cfg.dist to cowrie.cfg. The latter takes precedence over the other. Rename userdb to .txt for ssh honeypot access user/passwords.
 		cp etc/cowrie.cfg.dist etc/cowrie.cfg && mv etc/userdb.example etc/userdb.txt
@@ -257,7 +257,7 @@ cowrie_ARM_config()
 		sed -i '/output_splunk/{n;n;n;n;n;s/#sourcetype.*/sourcetype = cowrie/}' etc/cowrie.cfg
 		sed -i '/output_splunk/{n;n;n;n;n;n;s/#source.*/source = cowrie/}' etc/cowrie.cfg
 		exit
-		sudo docker restart $containerid
+		docker restart $containerid
 		echo "90";
 	) |
 	(
