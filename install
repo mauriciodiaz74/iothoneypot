@@ -67,7 +67,7 @@ check_error()
 }
 
 check_previous_install()
-{		echo "10"; sleep 1
+{		
 		if [ -d /home/pi/iothoneypot ]
 			then
 				#Remove RIOT folder
