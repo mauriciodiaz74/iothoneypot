@@ -438,7 +438,6 @@ initial_warning()
 #First, check if the script was run as sudo, and if platform is 64 bit. If not, exit.
 check_sudo
 check_platform
-check_previous_install
 
 #Installation LOG
 logging
