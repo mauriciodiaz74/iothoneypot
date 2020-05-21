@@ -175,6 +175,8 @@ docker_install()
 	sudo docker run hello-world | zenity 	--text-info --width=900 --height=300 --title="Testing Docker"
 }
 
+set -x  #Activate debugging from here
+
 cowrie_ARM_install()
 {
 	(
@@ -271,6 +273,7 @@ cowrie_ARM_config()
 	)
 }
 
+set +x #Stop debugging from here
 
 RIOT_iot_port()
 {
