@@ -1,5 +1,41 @@
 #!/bin/bash
 
+cowrie_ARM_install()
+{
+	(
+		echo "10"; sleep 1
+		#Cowrie x86 installation ->
+		#Install pre-requirements
+		sudo apt install apt-utils
+		sudo apt-get install -y git apt-utils python-virtualenv libssl-dev libffi-dev build-essential libpython-dev python2.7-minimal authbind libpcap-dev libpq-dev python3-wheel python-wheel-common python3-setuptools
+		echo "40"; sleep 1
+		pip install --upgrade pip
+		pip install --upgrade -r /home/pi/iothoneypot/cowrie_requirements.txt
+		#Uncomment the next 2 lines only if cowrie docker installation fails.
+		#pip3 install pycparser setuptools pendulum
+		#python -m pip install --upgrade pip setuptools wheel
+		echo "70"; sleep 1
+		#Download Cowrie
+		sudo git clone https://github.com/cowrie/docker-cowrie.git
+		echo "80"; sleep 1
+		#Compile cowrie
+		sudo docker build -t cowrie /home/pi/iothoneypot/docker-cowrie
+		echo "90";
+		#Run cowrie in the background and in a container listen in port 22, and redirected to port 2222 inside container
+    #sudo docker run -d --publish 22:2222/tcp cowrie
+	) |
+	(
+		zenity --progress \
+       		 --width=500 \
+       		 --height=100 \
+       		 --title="Cowrie installation" \
+       		 --text="Installing Cowrie. Patience, this could take 30 min. approx." \
+       		 --percentage=0
+		check_error 'Cowrie installation'
+	)
+}
+
+
 cowrie_install_virtual_env()
 {
 	(

@@ -183,35 +183,13 @@ cowrie_ARM_install()
 		docker pull jtorresheredia/cowrie-arm
 		echo "90"; sleep 1
 		docker run -d -p 22:2222/tcp jtorresheredia/cowrie-arm &
-		#Cowrie x86 installation ->
-		#Install pre-requirements
-		#sudo apt install apt-utils
-		#sudo apt-get install -y git apt-utils python-virtualenv libssl-dev libffi-dev build-essential libpython-dev python2.7-minimal authbind libpcap-dev libpq-dev python3-wheel python-wheel-common python3-setuptools
-		#echo "40"; sleep 1
-		#pip install --upgrade pip
-		#pip install --upgrade -r /home/pi/iothoneypot/cowrie_requirements.txt
-		#Uncomment the next 2 lines only if cowrie docker installation fails.
-		#pip3 install pycparser setuptools pendulum
-		#python -m pip install --upgrade pip setuptools wheel
-		#echo "70"; sleep 1
-		#Download Cowrie
-		#sudo git clone https://github.com/cowrie/docker-cowrie.git
-		#echo "80"; sleep 1
-		#Compile cowrie
-		#sudo docker build -t cowrie /home/pi/iothoneypot/docker-cowrie
-		#echo "90";
-		#Run cowrie in the background and in a container listen in port 22, and redirected to port 2222 inside container
-    #MD: -> Try one of the next 3. If the last one works, use that.
-		#sudo docker run --publish 22:2222/tcp cowrie > output.log 2>&1 &
-		#sudo sh -c "docker run --publish 22:2222/tcp cowrie > output.log 2>&1 &"
-		#sudo docker run -d --publish 22:2222/tcp cowrie
 	) |
 	(
 		zenity --progress \
        		 --width=500 \
        		 --height=100 \
        		 --title="Cowrie installation" \
-       		 --text="Installing Cowrie. Patience, this could take 30 min. approx." \
+       		 --text="Installing Cowrie..." \
        		 --percentage=0
 		check_error 'Cowrie installation'
 	)
