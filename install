@@ -178,39 +178,39 @@ docker_install()
 cowrie_install()
 {
 	(
-		echo "5"; sleep 1
+		echo "10"; sleep 1
 		if [ -d /home/pi/iothoneypot/docker-cowrie ]
 			then
 				#Remove docker-cowrie folder
 				sudo rm -Rf /home/pi/iothoneypot/docker-cowrie
 		fi
-		echo "10"; sleep 1
+		echo "20"; sleep 1
 		#alternative solution (jheredia cowrie docker)
-		#sudo docker pull jtorresheredia/cowrie-arm
-		#sudo docker run -d -p 22:2222/tcp jtorresheredia/cowrie-arm
+		sudo docker pull jtorresheredia/cowrie-arm
+		echo "30"; sleep 1
+		sudo docker run -d -p 22:2222/tcp jtorresheredia/cowrie-arm
 		#Normal instalation ->
 		#Install pre-requirements
-		sudo apt install apt-utils
-		echo "20"; sleep 1
-		sudo apt-get install -y git apt-utils python-virtualenv libssl-dev libffi-dev build-essential libpython-dev python2.7-minimal authbind libpcap-dev libpq-dev python3-wheel python-wheel-common python3-setuptools
-		echo "60"; sleep 1
-		pip install --upgrade pip
-		pip install --upgrade -r /home/pi/iothoneypot/requirements.txt
+		#sudo apt install apt-utils
+		#sudo apt-get install -y git apt-utils python-virtualenv libssl-dev libffi-dev build-essential libpython-dev python2.7-minimal authbind libpcap-dev libpq-dev python3-wheel python-wheel-common python3-setuptools
+		#echo "40"; sleep 1
+		#pip install --upgrade pip
+		#pip install --upgrade -r /home/pi/iothoneypot/cowrie_requirements.txt
 		#Uncomment the next 2 lines only if cowrie docker installation fails.
 		#pip3 install pycparser setuptools pendulum
 		#python -m pip install --upgrade pip setuptools wheel
-		echo "70"; sleep 1
+		#echo "70"; sleep 1
 		#Download Cowrie
-		sudo git clone https://github.com/cowrie/docker-cowrie.git
-		echo "80"; sleep 1
+		#sudo git clone https://github.com/cowrie/docker-cowrie.git
+		#echo "80"; sleep 1
 		#Compile cowrie
-		sudo docker build -t cowrie /home/pi/iothoneypot/docker-cowrie
-		echo "90";
+		#sudo docker build -t cowrie /home/pi/iothoneypot/docker-cowrie
+		#echo "90";
 		#Run cowrie in the background and in a container listen in port 22, and redirected to port 2222 inside container
     #MD: -> Try one of the next 3. If the last one works, use that.
 		#sudo docker run --publish 22:2222/tcp cowrie > output.log 2>&1 &
 		#sudo sh -c "docker run --publish 22:2222/tcp cowrie > output.log 2>&1 &"
-		sudo docker run -d --publish 22:2222/tcp cowrie
+		#sudo docker run -d --publish 22:2222/tcp cowrie
 	) |
 	(
 		zenity --progress \
@@ -367,7 +367,7 @@ cowrie_config_virtual_env()
 
 RIOT_iot_port()
 {
-	IOT_PORT=$(zenity --scale --width=300 --title="First IoT device port" --text="Please select the port where one of the IoT devices will be listening" --min-value=1000 --max-value=65535 --value=1000 --step=1)
+	IOT_PORT=$(zenity --scale --width=300 --title="First IoT device port" --text="Please select the port where one of the IoT devices will be listening" --min-value=1000 --max-value=65535 --value=1000 --step=1
 		if [ "$?" = 1 ]
 			then RIOT_iot_port
 		fi
@@ -406,7 +406,8 @@ RIOT_iot_devices()
 	(
 		echo "10"; sleep 1
 		#copy IoT folder (GitHub) to RIOT
-		cp -R /home/pi/iothoneypot/IoT_Honeypot /home/pi/RIOT
+		mkdir /home/pi/RIOT/IoT_Honeypot
+		cp -R /home/pi/iothoneypot/IoT_Honeypot /home/pi/RIOT/IoT_Honeypot
 		echo "20"; sleep 1
 		#compile IoT devices
 		make -C /home/pi/RIOT/IoT_Honeypot/
@@ -417,7 +418,7 @@ RIOT_iot_devices()
 		#visual confirmation to the user about new interfaces created
 		ifconfig | grep tap | zenity --text-info --title="IoT devices interfaces confirmation" --width 1000 --height 200
 		/home/pi/RIOT/IoT_Honeypot/bin/native/./IoT_Honeypot.elf tap0 | zenity --text-info --title="IoT device 1 execution confirmation" --width 1000 --height 400
-		/home/pi/RIOT/IoT_Honeypot/bin/native/./IoT_Honeypot.elf tap1 | zenity --text-info --title="IoT device 1 execution confirmation" --width 1000 --height 400
+		/home/pi/RIOT/IoT_Honeypot/bin/native/./IoT_Honeypot.elf tap1 | zenity --text-info --title="IoT device 2 execution confirmation" --width 1000 --height 400
 		#Configuration for docker RIOT ->
 		#Get the container ID from RIOT instance
 		#containerid2=$(sudo docker ps | sed -n '3 p' | sed 's/^\(............\).*/\1/;q')
@@ -517,12 +518,12 @@ initial_warning()
 	esac
 }
 
-#Installation LOG
-logging
-
 #First, check if the script was run as sudo, and if platform is 64 bit. If not, exit.
 check_sudo
-#check_platform
+check_platform
+
+#Installation LOG
+logging
 
 #Show the initial warning with general info and considerations of using the script
 initial_warning
@@ -532,8 +533,6 @@ installation_finished
 echo
 echo Done!
 echo The Honeypot is running in the background
-echo
-jobs
 echo
 echo Check locally if SSH port is open with: nmap 127.0.0.1
 echo Check locally if SSH port is accepting connections: ssh pi@127.0.0.1
@@ -546,4 +545,3 @@ exit 0
 # - Exit after Cancel button is pressed in any process. So far, only Cancel button in port selection...
 #...is working. If Cancel is pressed, ask again to select a port.
 # - Add IoT devices. Devices are configured and working, but assigning a port is still pending
-# - TELNET PORT availability.
