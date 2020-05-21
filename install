@@ -196,10 +196,10 @@ cowrie_ARM_config()
 		echo "20"; sleep 1
 		#Get the container ID from cowrie instance
 		containerid=$(docker ps | sed -n '2 p' | sed 's/^\(............\).*/\1/;q')
-		echo "30"; sleep 1
+		echo "30"; sleep 3
 		#Connect to a bash session inside cowrie docker instance
 		docker exec -it $containerid /bin/bash
-		echo "40"; sleep 1
+		echo "40"; sleep 5
 		# Backup cowrie.cfg.dist to cowrie.cfg. The latter takes precedence over the other. Rename userdb to .txt for ssh honeypot access user/passwords.
 		cp etc/cowrie.cfg.dist etc/cowrie.cfg && mv etc/userdb.example etc/userdb.txt
 		# Edit userdb.txt and change some too much obvious passwords.
@@ -227,6 +227,7 @@ cowrie_ARM_config()
 		sed -i '/output_splunk/{n;n;n;n;n;n;s/#source.*/source = cowrie/}' etc/cowrie.cfg
 		exit
 		docker restart $containerid
+		sleep 15
 		echo "90";
 	) |
 	(

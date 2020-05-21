@@ -12,6 +12,7 @@ Table of Contents
 * Samples
 * GDB Server for CMSIS-DAP based hardware debugger
 
+***********************************************************************************
 * Installing executables on Linux *
 Unpack the tarball to the install directory, like this:
 $ cd $install_dir && tar xjf gcc-arm-none-eabi-*-yyyymmdd-linux.tar.bz2
@@ -21,6 +22,7 @@ install python2.7.
 
 For some Ubuntu releases, the toolchain can also be installed via
 Launchpad PPA at https://launchpad.net/~team-gcc-arm-embedded/+archive/ubuntu/ppa.
+***********************************************************************************
 
 * Installing executables on Mac OS X *
 Unpack the tarball to the install directory, like this:
