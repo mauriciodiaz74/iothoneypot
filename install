@@ -178,20 +178,10 @@ docker_install()
 cowrie_ARM_install()
 {
 	(
-		echo "10"; sleep 1
 		#Download cowrie ARM version (jheredia cowrie docker)
-		docker pull jtorresheredia/cowrie-arm
-		echo "90"; sleep 1
-		docker run -d -p 22:2222/tcp jtorresheredia/cowrie-arm &
-	) |
-	(
-		zenity --progress \
-       		 --width=500 \
-       		 --height=100 \
-       		 --title="Cowrie installation" \
-       		 --text="Installing Cowrie..." \
-       		 --percentage=0
-		check_error 'Cowrie installation'
+		echo "Downloading Cowrie docker for ARM"; docker pull jtorresheredia/cowrie-arm
+		#Run cowrie in the background and in a container listen in port 22, and redirected to port 2222 inside container
+		echo "Docker run:";	docker run -d -p 22:2222/tcp jtorresheredia/cowrie-arm &
 	)
 }
 
