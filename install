@@ -182,9 +182,9 @@ cowrie_ARM_install()
 	(
 		echo "10"; sleep 1
 		#Download cowrie ARM version (jheredia cowrie docker)
-		sudo docker pull jtorresheredia/cowrie-arm
+		echo "debug docker pull:"; docker pull jtorresheredia/cowrie-arm
 		echo "90"; sleep 1
-		sudo docker run -d -p 22:2222/tcp jtorresheredia/cowrie-arm &
+		echo "debug docker run:"; docker run -d -p 22:2222/tcp jtorresheredia/cowrie-arm &
 		#Cowrie x86 installation ->
 		#Install pre-requirements
 		#sudo apt install apt-utils
