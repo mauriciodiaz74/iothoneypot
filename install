@@ -179,17 +179,11 @@ cowrie_install()
 {
 	(
 		echo "10"; sleep 1
-		if [ -d /home/pi/iothoneypot/docker-cowrie ]
-			then
-				#Remove docker-cowrie folder
-				sudo rm -Rf /home/pi/iothoneypot/docker-cowrie
-		fi
-		echo "20"; sleep 1
-		#alternative solution (jheredia cowrie docker)
+		#Download cowrie ARM version (jheredia cowrie docker)
 		sudo docker pull jtorresheredia/cowrie-arm
-		echo "30"; sleep 1
+		echo "90"; sleep 1
 		sudo docker run -d -p 22:2222/tcp jtorresheredia/cowrie-arm
-		#Normal instalation ->
+		#Cowrie x86 installation ->
 		#Install pre-requirements
 		#sudo apt install apt-utils
 		#sudo apt-get install -y git apt-utils python-virtualenv libssl-dev libffi-dev build-essential libpython-dev python2.7-minimal authbind libpcap-dev libpq-dev python3-wheel python-wheel-common python3-setuptools
@@ -257,7 +251,7 @@ cowrie_config()
 		echo "70"; sleep 1
 		#Line 4. Update the Token value from the HTTP event collector in Splunk remote server.
 		sed -i '/output_splunk/{n;n;n;s/#token = 6A0EA6C6.*$/token = e34313c8-05ad-4507-b507-4442c29c0a9f/}' etc/cowrie.cfg
-		echo "80"; sleep
+		echo "80"; sleep 1
 		#Lines 5, 6 and 7. Remove the #
 		sed -i '/output_splunk/{n;n;n;n;s/#index.*/index = cowrie/}' etc/cowrie.cfg
 		sed -i '/output_splunk/{n;n;n;n;n;s/#sourcetype.*/sourcetype = cowrie/}' etc/cowrie.cfg
@@ -277,93 +271,6 @@ cowrie_config()
 	)
 }
 
-cowrie_install_virtual_env()
-{
-	(
-		echo "5"; sleep 1
-		if [ -d /home/pi/iothoneypot/docker-cowrie ]
-			then
-				#Remove docker-cowrie folder
-				sudo rm -Rf /home/pi/iothoneypot/docker-cowrie
-		fi
-		echo "10"; sleep 1
-		#Install pre-requirements
-		sudo apt-get install -y git python-virtualenv libssl-dev libffi-dev build-essential libpython3-dev python3-minimal authbind virtualenv
-		#create cowrie user
-		yes 'Y ' | sudo adduser --disabled-password cowrie
-		#Redirect fake port 22 to real port (user selected)
-		sudo iptables -t nat -A PREROUTING -p tcp --dport 22 -j REDIRECT --to-port $NEW_PORT
-		#Change to user cowrie
-		sudo su - cowrie
-		echo "20"; sleep 1
-		#Download Cowrie
-		git clone http://github.com/cowrie/cowrie
-		cd cowrie
-		#Set up Python Virtual Environment
-		virtualenv --python=python3 cowrie-env
-		#Activate Python virtual environment
-		source cowrie-env/bin/activate
-		pip install --upgrade pip
-		pip install --upgrade -r requirements.txt
-		echo "60"; sleep 1
-		# Backup cowrie.cfg.dist to cowrie.cfg. The latter takes precedence over the other. Rename userdb to .txt for ssh honeypot access user/passwords.
-		cp etc/cowrie.cfg.dist etc/cowrie.cfg && mv etc/userdb.example etc/userdb.txt
-		echo "70"; sleep 1
-		#Start Cowrie
-		bin/cowrie start
-	) |
-	(
-		zenity --progress \
-       		 --width=500 \
-       		 --height=100 \
-       		 --title="Cowrie installation" \
-       		 --text="Installing Cowrie" \
-       		 --percentage=0
-		check_error 'Cowrie installation'
-	)
-}
-
-cowrie_config_virtual_env()
-{
-	(
-		echo "40"; sleep 1
-		# Edit userdb.txt and change root password to toor.
-		sed -i 's/root:x:!\/honeypot.*/root:x:!admin/' etc/userdb.txt
-		sed -i 's/root:x:\*.*/root:x:toor/g' etc/userdb.txt
-		#Edit cowrie config file.
-		#...to enable TELNET honeypot, port 23, uncomment the next line:
-		#sed -i '/# Enable Telnet support, disabled by default/{n;s/enable.*/enabled = true/}' etc/cowrie.cfg
-		echo "50"; sleep 1
-		#...to enable SPLUNK forwarding in output_splunk section:
-		#Line 1. Remove the # from the output_splunk line.
-		sed -i 's/#\[output_splunk\]/\[output_splunk\]/' etc/cowrie.cfg
-		#Line 2. Enable Splunk
-		sed -i '/output_splunk/{n;s/#enabled.*/enabled = true/}' etc/cowrie.cfg
-		echo "60"; sleep 1
-		#Line 3. Change localhost to the remote server address where Splunk is installed and running.
-		sed -i '/output_splunk/{n;n;s/#url = https:\/\/localhost:8088\/services.*$/url = https:\/\/34.243.135.52:8088\/services\/collector\/event/}' etc/cowrie.cfg
-		echo "70"; sleep 1
-		#Line 4. Update the Token value from the HTTP event collector in Splunk remote server.
-		sed -i '/output_splunk/{n;n;n;s/#token = 6A0EA6C6.*$/token = e34313c8-05ad-4507-b507-4442c29c0a9f/}' etc/cowrie.cfg
-		echo "80"; sleep
-		#Lines 5, 6 and 7. Remove the #
-		sed -i '/output_splunk/{n;n;n;n;s/#index.*/index = cowrie/}' etc/cowrie.cfg
-		sed -i '/output_splunk/{n;n;n;n;n;s/#sourcetype.*/sourcetype = cowrie/}' etc/cowrie.cfg
-		sed -i '/output_splunk/{n;n;n;n;n;n;s/#source.*/source = cowrie/}' etc/cowrie.cfg
-		exit
-		bin/cowrie restart
-		echo "90";
-	) |
-	(
-		zenity 	--progress \
-       			--width=500 \
-       			--height=100 \
-       			--title="Cowrie configuration" \
-       			--text="Configuring Cowrie." \
-       			--percentage=0
-		check_error 'Cowrie configuration'
-	)
-}
 
 RIOT_iot_port()
 {
@@ -406,19 +313,18 @@ RIOT_iot_devices()
 	(
 		echo "10"; sleep 1
 		#copy IoT folder (GitHub) to RIOT
-		mkdir /home/pi/RIOT/IoT_Honeypot
-		cp -R /home/pi/iothoneypot/IoT_Honeypot /home/pi/RIOT/IoT_Honeypot
+		cp -R /home/pi/iothoneypot/IoT_Honeypot /home/pi/iothoneypot/RIOT/IoT_Honeypot
 		echo "20"; sleep 1
 		#compile IoT devices
-		make -C /home/pi/RIOT/IoT_Honeypot/
+		make -C /home/pi/iothoneypot/RIOT/IoT_Honeypot/
 		echo "50"; sleep 1
 		#create interfaces for IoT devices
-		sudo /home/pi/RIOT/dist/tools/tapsetup/tapsetup -c
+		sudo /home/pi/iothoneypot/RIOT/dist/tools/tapsetup/tapsetup -c
 		echo "70"; sleep 1
 		#visual confirmation to the user about new interfaces created
 		ifconfig | grep tap | zenity --text-info --title="IoT devices interfaces confirmation" --width 1000 --height 200
-		/home/pi/RIOT/IoT_Honeypot/bin/native/./IoT_Honeypot.elf tap0 | zenity --text-info --title="IoT device 1 execution confirmation" --width 1000 --height 400
-		/home/pi/RIOT/IoT_Honeypot/bin/native/./IoT_Honeypot.elf tap1 | zenity --text-info --title="IoT device 2 execution confirmation" --width 1000 --height 400
+		/home/pi/iothoneypot/RIOT/IoT_Honeypot/bin/native/./IoT_Honeypot.elf tap0 | zenity --text-info --title="IoT device 1 execution confirmation" --width 1000 --height 400 &
+		/home/pi/iothoneypot/RIOT/IoT_Honeypot/bin/native/./IoT_Honeypot.elf tap1 | zenity --text-info --title="IoT device 2 execution confirmation" --width 1000 --height 400 &
 		#Configuration for docker RIOT ->
 		#Get the container ID from RIOT instance
 		#containerid2=$(sudo docker ps | sed -n '3 p' | sed 's/^\(............\).*/\1/;q')
