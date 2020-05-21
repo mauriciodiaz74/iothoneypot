@@ -175,7 +175,7 @@ docker_install()
 	sudo docker run hello-world | zenity 	--text-info --width=900 --height=300 --title="Testing Docker"
 }
 
-cowrie_install()
+cowrie_ARM_install()
 {
 	(
 		echo "10"; sleep 1
@@ -217,7 +217,7 @@ cowrie_install()
 	)
 }
 
-cowrie_config()
+cowrie_ARM_config()
 {
 	(
 		echo "10"; sleep 1
@@ -374,10 +374,10 @@ installation()
 	docker_install
 
 	#Install Cowrie - Docker version
-	cowrie_install
+	cowrie_ARM_install
 
 	#Cowrie, special configurations - Docker version
-	cowrie_config
+	cowrie_ARM_config
 
 	#Install Cowrie - no Docker version
 	#cowrie_install_no_docker
@@ -447,21 +447,22 @@ initial_warning
 
 #Proccess completed successfully
 installation_finished
+
 echo
-echo Done!
-echo The Honeypots are running in the background
+echo "Done!"
+echo "The Honeypots are running in the background"
 echo
-echo Check locally if SSH port is open with: nmap 127.0.0.1
-echo Check locally if SSH port is accepting connections: ssh pi@127.0.0.1
-echo Check from other device scanning the network and trying to connect to SSH an Telnet ports.
+echo "Check locally if SSH port is open with: nmap 127.0.0.1"
+echo "Check locally if SSH port is accepting connections: ssh pi@127.0.0.1"
+echo "Check from other device scanning the network and trying to connect to SSH an Telnet ports."
 echo
-echo Check if 2 IoT devices are running, with these commands:
-echo tap0
-echo tap1
-echo tap0 activates an interface of one virtual IoT device. The same with tap1.
-echo Once executed tap0 or tap1 or both, you will enter into the OS of the virtual IoT device.
-echo Once inside, type info (info about the device), or help for more Commands
-echo more info in the file: /home/pi/iothoneypot/RIOT/IoT_Honeypot/README.md
+echo "Check if 2 IoT devices are running, with these commands:"
+echo "tap0"
+echo "tap1"
+echo "tap0 activates an interface of one virtual IoT device. The same with tap1."
+echo "Once executed tap0 or tap1 or both, you will enter into the OS of the virtual IoT device."
+echo "Once inside, type info (info about the device), or help for more Commands"
+echo "more info in the file: /home/pi/iothoneypot/RIOT/IoT_Honeypot/README.md"
 exit 0
 
 #######################################################################################################
