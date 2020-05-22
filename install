@@ -2,7 +2,7 @@
 
 #19-05-20_17:48
 #Variables
-FILE=`dirname $0`/README
+FILE=`dirname $0`/CONSIDERATIONS.txt
 MACHINE_TYPE=`uname -m`
 USER=`whoami`
 TOP_MARGIN=30
@@ -369,7 +369,7 @@ installation_finished()
 initial_warning()
 {
 	zenity 	--text-info \
-       		--title="README" \
+       		--title="CONSIDERATIONS" \
        		--width=$W \
        		--height=$H \
        		--filename=$FILE \
