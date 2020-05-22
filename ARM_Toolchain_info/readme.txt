@@ -48,6 +48,7 @@ To use gdb python build (arm-none-eabi-gdb-py), you need install 32 bit
 python2.7 no matter 32 or 64 bit Windows. Please get the package from
 https://www.python.org/download/.
 
+****************************************************************************
 * Invoking GCC *
 On Linux and Mac OS X, either invoke with the complete path like this:
 $ $install_dir/gcc-arm-none-eabi-*/bin/arm-none-eabi-gcc
@@ -55,6 +56,7 @@ $ $install_dir/gcc-arm-none-eabi-*/bin/arm-none-eabi-gcc
 Or set path like this:
 $ export PATH=$PATH:$install_dir/gcc-arm-none-eabi-*/bin
 $ arm-none-eabi-gcc
+****************************************************************************
 
 On Windows (although the above approaches also work), it can be more
 convenient to either have the installer register environment variables, or run

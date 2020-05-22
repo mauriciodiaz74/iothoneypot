@@ -193,31 +193,32 @@ cowrie_ARM_config()
 		##sudo apt-get -y install telnetd
 		##sudo /etc/init.d/openbsd-inetd restart
 		#Get the container ID from cowrie instance
-		echo "Getting container ID:"; containerid=$(docker ps | sed -n '2 p' | sed 's/^\(............\).*/\1/;q')
+		echo "Getting container ID."; containerid=$(docker ps | sed -n '2 p' | sed 's/^\(............\).*/\1/;q')
+		echo "Container ID is: $containerid"
 		sleep 5
-		#Connect to a bash session inside cowrie docker instance, and execute commands inside it
+		#Connect to a bash session inside co-it wrie docker instance, and execute commands inside it
 		# Backup cowrie.cfg.dist to cowrie.cfg. The latter takes precedence over the other. Rename userdb to .txt for ssh honeypot access user/passwords.
-		echo "Executing command:"; docker exec -it $containerid cp etc/cowrie.cfg.dist etc/cowrie.cfg
-		echo "Executing command:"; docker exec -it $containerid mv etc/userdb.example etc/userdb.txt
+		echo "Executing command inside container."; docker exec -it $containerid cp etc/cowrie.cfg.dist etc/cowrie.cfg
+		echo "Executing command inside container."; docker exec -it $containerid mv etc/userdb.example etc/userdb.txt
 		# Edit userdb.txt and change some too much obvious passwords.
-		echo "Executing command:"; docker exec -it $containerid sed -i 's/root:x:!\/honeypot.*/root:x:!admin/' etc/userdb.txt
-		echo "Executing command:"; docker exec -it $containerid sed -i 's/root:x:\*.*/root:x:toor/g' etc/userdb.txt
+		echo "Executing command inside container"; docker exec -it $containerid sed -i 's/root:x:!\/honeypot.*/root:x:!admin/' etc/userdb.txt
+		echo "Executing command inside container"; docker exec -it $containerid sed -i 's/root:x:\*.*/root:x:toor/g' etc/userdb.txt
 		#Edit cowrie config file.
 		#...to enable TELNET honeypot, port 23, uncomment the next line:
 		#sed -i '/# Enable Telnet support, disabled by default/{n;s/enable.*/enabled = true/}' etc/cowrie.cfg
 		#...to enable SPLUNK forwarding in output_splunk section:
 		#Line 1. Remove the # from the output_splunk line.
-		echo "Executing command:"; docker exec -it $containerid sed -i 's/#\[output_splunk\]/\[output_splunk\]/' etc/cowrie.cfg
+		echo "Executing command inside container"; docker exec -it $containerid sed -i 's/#\[output_splunk\]/\[output_splunk\]/' etc/cowrie.cfg
 		#Line 2. Enable Splunk
-		echo "Executing command:"; docker exec -it $containerid sed -i '/output_splunk/{n;s/#enabled.*/enabled = true/}' etc/cowrie.cfg
+		echo "Executing command inside container"; docker exec -it $containerid sed -i '/output_splunk/{n;s/#enabled.*/enabled = true/}' etc/cowrie.cfg
 		#Line 3. Change localhost to the remote server address where Splunk is installed and running.
-		echo "Executing command:"; docker exec -it $containerid sed -i '/output_splunk/{n;n;s/#url = https:\/\/localhost:8088\/services.*$/url = https:\/\/34.243.135.52:8088\/services\/collector\/event/}' etc/cowrie.cfg
+		echo "Executing command inside container"; docker exec -it $containerid sed -i '/output_splunk/{n;n;s/#url = https:\/\/localhost:8088\/services.*$/url = https:\/\/34.243.135.52:8088\/services\/collector\/event/}' etc/cowrie.cfg
 		#Line 4. Update the Token value from the HTTP event collector in Splunk remote server.
-		echo "Executing command:"; docker exec -it $containerid sed -i '/output_splunk/{n;n;n;s/#token = 6A0EA6C6.*$/token = e34313c8-05ad-4507-b507-4442c29c0a9f/}' etc/cowrie.cfg
+		echo "Executing command inside container"; docker exec -it $containerid sed -i '/output_splunk/{n;n;n;s/#token = 6A0EA6C6.*$/token = e34313c8-05ad-4507-b507-4442c29c0a9f/}' etc/cowrie.cfg
 		#Lines 5, 6 and 7. Remove the #
-		echo "Executing command:"; docker exec -it $containerid sed -i '/output_splunk/{n;n;n;n;s/#index.*/index = cowrie/}' etc/cowrie.cfg
-		echo "Executing command:"; docker exec -it $containerid sed -i '/output_splunk/{n;n;n;n;n;s/#sourcetype.*/sourcetype = cowrie/}' etc/cowrie.cfg
-		echo "Executing command:"; docker exec -it $containerid sed -i '/output_splunk/{n;n;n;n;n;n;s/#source.*/source = cowrie/}' etc/cowrie.cfg
+		echo "Executing command inside container"; docker exec -it $containerid sed -i '/output_splunk/{n;n;n;n;s/#index.*/index = cowrie/}' etc/cowrie.cfg
+		echo "Executing command inside container"; docker exec -it $containerid sed -i '/output_splunk/{n;n;n;n;n;s/#sourcetype.*/sourcetype = cowrie/}' etc/cowrie.cfg
+		echo "Executing command inside container"; docker exec -it $containerid sed -i '/output_splunk/{n;n;n;n;n;n;s/#source.*/source = cowrie/}' etc/cowrie.cfg
 		exit
 		echo "restarting container:"; docker restart $containerid
 		sleep 15

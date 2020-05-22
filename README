@@ -6,14 +6,19 @@ Visit http://www.darkdefense.net/own/iothoneypot/supported, to learn about the R
 
 If the device you are installing on is not a Raspberry Pi, or the model is not supported, we recommend that you cancel the installation.
 
+This program does not support Raspberry Pi Virtual Machines, since they are only 32 bit (so far, there are no VM Raspberry Pi 3 64 bit version). The reason is because, this installation uses Docker, and there is no Docker 32 bit for Raspberry Pi.
+
 This installation involves changing some of the system's parameters and the installation of additional packages, thus, take in account the following:
 
 - The real SSH service, which by default is on port 22, will be moved to one that will be known only to you. You will be asked to which port you want to move this SSH service.
 - The DOCKER container (PaaS) will be installed, in order to install the Cowrie honeypot in an isolated and safe way within the Raspberry Pi Operating System.
 - Docker will also be configured as a system service, so that it automatically starts automatically if it is not terminated by explicit order. Furthermore, said service will be automatically initialized every time the operating system is restarted.
-- Through the isolated Honeypot Cowrie, the false services (honeypot) of SSH and TELNET will be enabled, which will use the usual ports for these services (23 and 22). They will be visible to any port scan to the raspberry Pi.
+- Through the isolated Honeypot Cowrie, the false service (honeypot) of SSH will be enabled, which will use the usual port for this service (22). It will be visible to any port scan to the raspberry Pi.
 - The RIOT microkernel operating system will be installed. Through this operating system, virtual IoT devices will be enabled, with real operation. This implies that it is possible to interact with them through various commands. Each virtual IoT device has a virtualized communication port with real hardware address, so it is possible to send messages between them.
-- These IoT devices will be accessible through a special port that will also be visible to port scans made to the Raspberry Pi.
+- One of these IoT devices (only one) will be accessible through a port that will also be visible to port scans made to the Raspberry Pi.
 
-Installation Logs:
+More info in about IoT devices operation in:
+/home/pi/iothoneypot/RIOT/IoT_Honeypot/README.md
+
+Installation Log:
 /var/log/iothoneypot_install.log
