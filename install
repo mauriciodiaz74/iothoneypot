@@ -181,7 +181,8 @@ cowrie_ARM_install()
 		#Download cowrie ARM version (jheredia cowrie docker)
 		echo "Downloading Cowrie docker ARM version"; docker pull jtorresheredia/cowrie-arm
 		#Run cowrie in the background and in a container listen in port 22, and redirected to port 2222 inside container
-		echo "Docker run:";	docker run -d -v /var/log/cowrie:/cowrie/cowrie-git/var/log/cowrie -p 22:2222/tcp jtorresheredia/cowrie-arm &
+		echo "Docker run:";	docker run -d -p 22:2222/tcp jtorresheredia/cowrie-arm
+		#echo "Docker run:";	docker run -d -v /var/log/cowrie:/cowrie/cowrie-git/var/log/cowrie -p 22:2222/tcp jtorresheredia/cowrie-arm &
 		sleep 15
 	)
 }
