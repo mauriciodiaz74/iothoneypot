@@ -181,11 +181,17 @@ docker_install()
 }
 
 cowrie_ARM_install()
+#include splunkforwarder installation and configuration to use with cowrie
 {
 	(
+		if [ -d /var/log/cowrie ]
+			then
+				#Remove shared log folder if exist.
+				echo "Removig previous shared log folder"; rm -Rf /var/log/cowrie
+		fi
 		if [ -d /opt/splunkforwarder ]
 			then
-				#Remove splunkforwarfer folder
+				#Remove splunkforwarder if exist.
 				echo "Removig previous splunkforwarder folder"; rm -Rf /opt/splunkforwarder
 		fi
 		if [ -f /opt/splunkforwarder-8.0.3-a6754d8441bf-Linux-arm.tgz ]
@@ -198,14 +204,34 @@ cowrie_ARM_install()
 				#Remove user-seed.conf
 				echo "Removing previous user-seed file"; rm /opt/user-seed.conf
 		fi
+		#create shared log and change permissiones to it, to could use it insider container
+		mkdir /var/log/cowrie
+		chown pi:pi -R /var/log/cowrie
 		#download pre-cowrie_requirements
-		wget -O /opt/splunkforwarder-8.0.3-a6754d8441bf-Linux-arm.tgz http://www.darkdefense.net/own/iotsplunk/splunkforwarder-8.0.3-a6754d8441bf-Linux-arm.tgz
-		tar -xvzf /opt/splunkforwarder-8.0.3-a6754d8441bf-Linux-arm.tgz -C /opt
-		wget -O /opt/user-seed.conf http://www.darkdefense.net/own/iotsplunk/user-seed.conf
+		echo "Downloading splunk forwarder ARM version to use it with cowrie"; wget -O /opt/splunkforwarder-8.0.3-a6754d8441bf-Linux-arm.tgz http://www.darkdefense.net/own/iotsplunk/splunkforwarder-8.0.3-a6754d8441bf-Linux-arm.tgz
+		echo "Unzipping splunk forwarder ARM version"; tar -xvzf /opt/splunkforwarder-8.0.3-a6754d8441bf-Linux-arm.tgz -C /opt
+		echo "Downloading splunk forwarder config file"; wget -O /opt/user-seed.conf http://www.darkdefense.net/own/iotsplunk/user-seed.conf
+		#echo "Downloading splunk forwarder config file"; wget -O /opt/user-seed.conf http://www.darkdefense.net/own/iotsplunk/outputs.conf
+		#Install splunkforwarder
+		/opt/splunkforwarder/bin/./splunk start --accept-license --answer-yes --no-prompt
+		/opt/splunkforwarder/bin/./splunk stop
+		#Provide credentials and server configuration
+		cp /opt/user-seed.conf /opt/splunkforwarder/etc/system/local/
+		#rm /opt/splunkforwarder/etc/apps/SplunkUniversalForwarder/default/outputs.conf
+		#cp /opt/outputs.conf /opt/splunkforwarder/etc/apps/SplunkUniversalForwarder/default
+		echo '[tcpout:my_indexers]' | sudo tee -a /opt/splunkforwarder/etc/apps/SplunkUniversalForwarder/default/outputs.conf
+		echo 'server=34.243.135.52:9997' | sudo tee -a /opt/splunkforwarder/etc/apps/SplunkUniversalForwarder/default/outputs.conf
+		/opt/splunkforwarder/bin/./splunk start
+		#confirm installation
+		echo "Splunk forwarder status:"; /opt/splunkforwarder/bin/./splunk status
 		#Download cowrie ARM version (jheredia cowrie docker)
 		echo "Downloading Cowrie docker ARM version"; docker pull jtorresheredia/cowrie-arm
 		#Run cowrie in the background and in a container listen in port 22, and redirected to port 2222 inside container
-		echo "Docker run:";	docker run -d -p 22:2222/tcp jtorresheredia/cowrie-arm
+		echo "Starting cowrie docker container:"
+		docker run 	--detach \
+		 					 	--volume /var/log/cowrie:/cowrie/cowrie-git/var/log/shared-log \
+								--publish 22:2222/tcp \
+								jtorresheredia/cowrie-arm
 		#echo "Docker run:";	docker run -d -v /var/log/cowrie:/cowrie/cowrie-git/var/log/cowrie -p 22:2222/tcp jtorresheredia/cowrie-arm
 		sleep 15
 	)
@@ -227,8 +253,10 @@ cowrie_ARM_config()
 		echo "Executing command inside container"; docker exec $containerid mv etc/userdb.example etc/userdb.txt
 		# Edit userdb.txt and change some too much obvious passwords.
 		echo "Executing command inside container"; docker exec $containerid sed -i 's/root:x:!\/honeypot.*/root:x:!admin/' etc/userdb.txt
-		echo "Executing command inside container"; docker exec $containerid sed -i 's/root:x:\*.*/root:x:toor/g' etc/userdb.txt
+		echo "Executing command inside container"; docker exec $containerid sed -i 's/root:x:\*.*/root:x:toor/		' etc/userdb.txt
 		#Edit cowrie config file.
+		#Change the default log to the shared log previously created and activated inside the container
+		echo "Executing command inside container"; docker exec $containerid sed -i 's/log_path.*/log_path = var\/log\/shared-log/' etc/cowrie.cfg
 		#...to enable TELNET honeypot, port 23, uncomment the next line:
 		#sed -i '/# Enable Telnet support, disabled by default/{n;s/enable.*/enabled = true/}' etc/cowrie.cfg
 		#...to enable SPLUNK forwarding in output_splunk section:
@@ -249,11 +277,6 @@ cowrie_ARM_config()
 		echo "Getting container ID."; containerid=$(docker ps | sed -n '2 p' | sed 's/^\(............\).*/\1/;q')
 		echo "Container ID is: $containerid"
 		#Copy splunkforwarder inside container:
-		echo "Executing command inside container"; docker cp /opt/splunkforwarder $containerid:/opt
-		echo "Executing command inside container"; docker exec --privileged -w /opt $containerid ./splunk start --accept-license --answer-yes –no-prompt
-		echo "Executing command inside container"; docker exec --privileged -w /opt/splunkforwarder/bin/ $containerid ./splunk stop
-		echo "Executing command inside container"; docker cp /opt/user-seed.conf $containerid:/opt/splunkforwarder/etc/system/local/
-		echo "Executing command inside container"; docker exec --privileged -w /opt $containerid ./splunk start
 		exit
 	)
 }
