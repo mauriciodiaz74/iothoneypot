@@ -127,6 +127,24 @@ update_upgrade()
 	)
 }
 
+removing_previous_docker()
+{
+	#Stop and remove all docker containers images and volumes, and uninstall previous docker versions
+	echo "Removing previous docker installation:"
+	echo "Stopping containers"; docker container stop $(sudo docker container ls -aq)
+	echo "Removing containers"; docker container prune --force; sleep 5
+	echo "Removing images"; docker image prune --all --force; sleep 5
+	echo "Removing docker system"; docker system prune --all --force --volumes; sleep 5
+	echo "Uninstaling docker"; apt-get purge -y docker-engine docker docker.io docker-ce docker-ce-cli containerd runc
+	sleep 5
+	echo "Cleaning cache"; apt-get autoremove -y --purge docker-engine docker docker.io docker-ce
+	sleep 5
+	echo "Removing associated files"; rm -Rf /var/lib/docker /etc/docker
+	echo "Removing associated files"; rm -Rf /etc/apparmor.d/docker
+	echo "Removing associated files"; rm -Rf /var/run/docker.sock
+	echo "Removing docker group"; groupdel docker
+}
+
 docker_install()
 {
 	(
@@ -134,31 +152,18 @@ docker_install()
 		#Check if docker is installed
 		if [ -x "$(command -v docker)" ]
 			then
-						#Stop and remove all docker containers images and volumes, and uninstall previous docker versions
-						echo "Removing previous docker installation:"
-						echo "Stopping containers"; docker container stop $(sudo docker container ls -aq)
-						echo "Removing containers"; docker container prune --force; sleep 5
-						echo "Removing images"; docker image prune --all --force; sleep 5
-    				echo "Removing docker system"; docker system prune --all --force --volumes; sleep 5
-						echo "Uninstaling docker"; apt-get purge -y docker-engine docker docker.io docker-ce docker-ce-cli containerd runc
-						sleep 5
-						echo "Cleaning cache"; apt-get autoremove -y --purge docker-engine docker docker.io docker-ce
-						sleep 5
-						echo "Removing associated files"; rm -Rf /var/lib/docker /etc/docker
-						echo "Removing associated files"; rm -Rf /etc/apparmor.d/docker
-						echo "Removing associated files"; rm -Rf /var/run/docker.sock
-						echo "Removing docker group"; groupdel docker
+				removing_previous_docker
     	fi
-		echo "50"; sleep 1
+		echo "30"; sleep 1
 		#Download docker installer script
 		curl -fsSL https://get.docker.com -o get-docker.sh
-		echo "60"; sleep 1
+		echo "50"; sleep 1
 		#Run docker installer script
 		sudo sh get-docker.sh
 		echo "70"; sleep 1
 		#Add current user to docker group
 		sudo usermod -aG docker ${USER}
-		echo "80";
+		echo "90";
 		#Enable docker to start on boot with systemd
 		sudo systemctl enable docker
 	) |
