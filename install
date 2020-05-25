@@ -135,32 +135,30 @@ docker_install()
 		if [ -x "$(command -v docker)" ]
 			then
 						#Stop and remove all docker containers images and volumes, and uninstall previous docker versions
-						docker container stop $(sudo docker container ls -aq)
-						echo "10"; sleep 3
-						docker container prune --force; sleep 5
-						docker image prune --all --force; sleep 5
-    				docker system prune --all --force --volumes; sleep 5
-						echo "20"; sleep 1
-						apt-get purge -y docker-engine docker docker.io docker-ce docker-ce-cli containerd runc
+						echo "Removing previous docker installation:"
+						echo "Stopping containers"; docker container stop $(sudo docker container ls -aq)
+						echo "Removing containers"; docker container prune --force; sleep 5
+						echo "Removing images"; docker image prune --all --force; sleep 5
+    				echo "Removing docker system"; docker system prune --all --force --volumes; sleep 5
+						echo "Uninstaling docker"; apt-get purge -y docker-engine docker docker.io docker-ce docker-ce-cli containerd runc
 						sleep 5
-						apt-get autoremove -y --purge docker-engine docker docker.io docker-ce
+						echo "Cleaning cache"; apt-get autoremove -y --purge docker-engine docker docker.io docker-ce
 						sleep 5
-						echo "30"; sleep 1
-						rm -Rf /var/lib/docker /etc/docker
-						rm -Rf /etc/apparmor.d/docker
-						rm -Rf /var/run/docker.sock
-						groupdel docker
+						echo "Removing associated files"; rm -Rf /var/lib/docker /etc/docker
+						echo "Removing associated files"; rm -Rf /etc/apparmor.d/docker
+						echo "Removing associated files"; rm -Rf /var/run/docker.sock
+						echo "Removing docker group"; groupdel docker
     	fi
-		echo "40"; sleep 1
+		echo "50"; sleep 1
 		#Download docker installer script
 		curl -fsSL https://get.docker.com -o get-docker.sh
-		echo "50"; sleep 1
+		echo "60"; sleep 1
 		#Run docker installer script
 		sudo sh get-docker.sh
-		echo "60"; sleep 1
+		echo "70"; sleep 1
 		#Add current user to docker group
 		sudo usermod -aG docker ${USER}
-		echo "90";
+		echo "80";
 		#Enable docker to start on boot with systemd
 		sudo systemctl enable docker
 	) |
@@ -182,18 +180,18 @@ cowrie_ARM_install()
 	(
 		if [ -d /opt/splunkforwarder ]
 			then
-				#Remove RIOT folder
-				rm -Rf /opt/splunkforwarder
+				#Remove splunkforwarfer folder
+				echo "Removig previous splunkforwarder folder"; rm -Rf /opt/splunkforwarder
 		fi
 		if [ -f /opt/splunkforwarder-8.0.3-a6754d8441bf-Linux-arm.tgz ]
 			then
-				#Remove RIOT folder
-				rm /opt/splunkforwarder-8.0.3-a6754d8441bf-Linux-arm.tgz
+				#Remove splunkforwarder compressed file
+				echo "Removing previous splunkforwarder compressed file"; rm /opt/splunkforwarder-8.0.3-a6754d8441bf-Linux-arm.tgz
 		fi
 		if [ -f /opt/user-seed.conf ]
 			then
-				#Remove RIOT folder
-				rm /opt/user-seed.conf
+				#Remove user-seed.conf
+				echo "Removing previous user-seed file"; rm /opt/user-seed.conf
 		fi
 		#download pre-cowrie_requirements
 		wget -O /opt/splunkforwarder-8.0.3-a6754d8441bf-Linux-arm.tgz http://www.darkdefense.net/own/iotsplunk/splunkforwarder-8.0.3-a6754d8441bf-Linux-arm.tgz
@@ -220,8 +218,8 @@ cowrie_ARM_config()
 		sleep 5
 		#Connect to a bash session inside co-it wrie docker instance, and execute commands inside it
 		# Backup cowrie.cfg.dist to cowrie.cfg. The latter takes precedence over the other. Rename userdb to .txt for ssh honeypot access user/passwords.
-		echo "Executing command inside container."; docker exec $containerid cp etc/cowrie.cfg.dist etc/cowrie.cfg
-		echo "Executing command inside container."; docker exec $containerid mv etc/userdb.example etc/userdb.txt
+		echo "Executing command inside container"; docker exec $containerid cp etc/cowrie.cfg.dist etc/cowrie.cfg
+		echo "Executing command inside container"; docker exec $containerid mv etc/userdb.example etc/userdb.txt
 		# Edit userdb.txt and change some too much obvious passwords.
 		echo "Executing command inside container"; docker exec $containerid sed -i 's/root:x:!\/honeypot.*/root:x:!admin/' etc/userdb.txt
 		echo "Executing command inside container"; docker exec $containerid sed -i 's/root:x:\*.*/root:x:toor/g' etc/userdb.txt
@@ -241,15 +239,15 @@ cowrie_ARM_config()
 		echo "Executing command inside container"; docker exec $containerid sed -i '/output_splunk/{n;n;n;n;s/#index.*/index = cowrie/}' etc/cowrie.cfg
 		echo "Executing command inside container"; docker exec $containerid sed -i '/output_splunk/{n;n;n;n;n;s/#sourcetype.*/sourcetype = cowrie/}' etc/cowrie.cfg
 		echo "Executing command inside container"; docker exec $containerid sed -i '/output_splunk/{n;n;n;n;n;n;s/#source.*/source = cowrie/}' etc/cowrie.cfg
-		echo "restarting container:"; docker restart $containerid
+		echo "Restarting container:"; docker restart $containerid
 		sleep 15
 		echo "Getting container ID."; containerid=$(docker ps | sed -n '2 p' | sed 's/^\(............\).*/\1/;q')
 		echo "Container ID is: $containerid"
 		#Copy splunkforwarder inside container:
-		echo "Executing command inside container"; docker cp -a /opt/splunkforwarder $containerid:/opt
+		echo "Executing command inside container"; docker cp /opt/splunkforwarder $containerid:/opt
 		echo "Executing command inside container"; docker exec --privileged -w /opt $containerid ./splunk start --accept-license --answer-yes –no-prompt
 		echo "Executing command inside container"; docker exec --privileged -w /opt/splunkforwarder/bin/ $containerid ./splunk stop
-		echo "Executing command inside container"; docker cp -a /opt/user-seed.conf $containerid:/opt/splunkforwarder/etc/system/local/
+		echo "Executing command inside container"; docker cp /opt/user-seed.conf $containerid:/opt/splunkforwarder/etc/system/local/
 		echo "Executing command inside container"; docker exec --privileged -w /opt $containerid ./splunk start
 		exit
 	)
