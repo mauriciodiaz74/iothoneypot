@@ -178,11 +178,15 @@ docker_install()
 cowrie_ARM_install()
 {
 	(
+		#download pre-cowrie_requirements
+		wget -O /opt/splunkforwarder-8.0.3-a6754d8441bf-Linux-arm.tgz http://www.darkdefense.net/own/iotsplunk/splunkforwarder-8.0.3-a6754d8441bf-Linux-arm.tgz
+		tar -xvzf /opt/splunkforwarder-8.0.3-a6754d8441bf-Linux-arm.tgz
+		wget -O /opt/user-seed.conf http://www.darkdefense.net/own/iotsplunk/user-seed.conf
 		#Download cowrie ARM version (jheredia cowrie docker)
 		echo "Downloading Cowrie docker ARM version"; docker pull jtorresheredia/cowrie-arm
 		#Run cowrie in the background and in a container listen in port 22, and redirected to port 2222 inside container
 		echo "Docker run:";	docker run -d -p 22:2222/tcp jtorresheredia/cowrie-arm
-		#echo "Docker run:";	docker run -d -v /var/log/cowrie:/cowrie/cowrie-git/var/log/cowrie -p 22:2222/tcp jtorresheredia/cowrie-arm &
+		#echo "Docker run:";	docker run -d -v /var/log/cowrie:/cowrie/cowrie-git/var/log/cowrie -p 22:2222/tcp jtorresheredia/cowrie-arm
 		sleep 15
 	)
 }
@@ -220,9 +224,15 @@ cowrie_ARM_config()
 		echo "Executing command inside container"; docker exec $containerid sed -i '/output_splunk/{n;n;n;n;s/#index.*/index = cowrie/}' etc/cowrie.cfg
 		echo "Executing command inside container"; docker exec $containerid sed -i '/output_splunk/{n;n;n;n;n;s/#sourcetype.*/sourcetype = cowrie/}' etc/cowrie.cfg
 		echo "Executing command inside container"; docker exec $containerid sed -i '/output_splunk/{n;n;n;n;n;n;s/#source.*/source = cowrie/}' etc/cowrie.cfg
-		exit
 		echo "restarting container:"; docker restart $containerid
 		sleep 15
+		#Copy splunkforwarder inside container:
+		echo "Executing command inside container"; docker cp -a splunkforwarder $containerid:/opt
+		echo "Executing command inside container"; docker exec --privileged -w /opt $containerid ./splunk start --accept-license --answer-yes –no-prompt
+		echo "Executing command inside container"; docker exec --privileged -w /opt/splunkforwarder/bin/ $containerid ./splunk stop
+		echo "Executing command inside container"; docker cp -a user-seed.conf $containerid:/opt/splunkforwarder/etc/system/local/
+		echo "Executing command inside container"; docker exec --privileged -w /opt $containerid ./splunk start
+		exit
 	)
 }
 
