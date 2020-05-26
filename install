@@ -214,16 +214,19 @@ cowrie_ARM_install()
 		#echo "Downloading splunk forwarder config file"; wget -O /opt/user-seed.conf http://www.darkdefense.net/own/iotsplunk/outputs.conf
 		#Install splunkforwarder
 		/opt/splunkforwarder/bin/./splunk start --accept-license --answer-yes --no-prompt
+		Sleep 3
 		/opt/splunkforwarder/bin/./splunk stop
+		Sleep 1
 		#Provide credentials and server configuration
-		cp /opt/user-seed.conf /opt/splunkforwarder/etc/system/local/
+		echo "Copying new user-seed"; cp /opt/user-seed.conf /opt/splunkforwarder/etc/system/local/
 		#rm /opt/splunkforwarder/etc/apps/SplunkUniversalForwarder/default/outputs.conf
 		#cp /opt/outputs.conf /opt/splunkforwarder/etc/apps/SplunkUniversalForwarder/default
+		echo "Configuring outputs in splunkforwarder"
 		echo '[tcpout:my_indexers]' | sudo tee -a /opt/splunkforwarder/etc/apps/SplunkUniversalForwarder/default/outputs.conf
 		echo 'server=34.243.135.52:9997' | sudo tee -a /opt/splunkforwarder/etc/apps/SplunkUniversalForwarder/default/outputs.conf
 		/opt/splunkforwarder/bin/./splunk start
 		#confirm installation
-		echo "Splunk forwarder status:"; /opt/splunkforwarder/bin/./splunk status
+		echo "Splunk forwarder status:"; /opt/splunkforwarder/bin/./splunk status | grep check
 		#Download cowrie ARM version (jheredia cowrie docker)
 		echo "Downloading Cowrie docker ARM version"; docker pull jtorresheredia/cowrie-arm
 		#Run cowrie in the background and in a container listen in port 22, and redirected to port 2222 inside container
