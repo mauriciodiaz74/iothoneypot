@@ -71,7 +71,7 @@ error_message()
 	zenity 	--error \
 					--width=300 \
 					--height=50 \
-					--text="$message"
+					--text="$1"
 }
 
 activate_ssh()
@@ -325,7 +325,7 @@ RIOT_iot_port()
 #Get from the user, the NEW port to IoT devices environment (only one port is needed). Can't be the same for the real SSH port (also user selected previously)
 {
 	IOT_PORT=$(zenity --scale --width=300 --title="First IoT device port" --text="Please select the port where one of the IoT devices will be listening" --min-value=1000 --max-value=65535 --value=1000 --step=1
-		if [ $IOT_PORT = $NEW_PORT ]
+		if [ "$IOT_PORT" = "$NEW_PORT" ]
 			then
 					error_message 'Please, choose another port, that was previously chosen for SSH'; RIOT_iot_port
 		elif [ "$?" -ne 0 ]
