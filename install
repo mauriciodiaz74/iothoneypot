@@ -56,13 +56,13 @@ check_platform()
 check_error()
 #Exit the program if there is an error
 {
-	if [ "$?" -ne 0 ]
+	if [ "$?" != 0 ]
 		then
-       			zenity --error \
-			      			 --width=300 \
-									 --height=50 \
-       						 --text="$1. Operation canceled."
-						exit 1
+       		zenity --error \
+			     			 --width=300 \
+								 --height=50 \
+       					 --text="Operation terminated in $1"
+					exit 1
 	fi
 }
 
@@ -74,6 +74,14 @@ error_message()
 					--text="$1"
 }
 
+info_message()
+{
+	zenity 	--info \
+					--width=300 \
+					--height=150 \
+					--text="$1"
+}
+
 activate_ssh()
 #Raspberry Pi port 22 activation
 {
@@ -82,9 +90,8 @@ activate_ssh()
 		#Enable SSH. By default is closed in Rapsberry Pi.
 		systemctl enable ssh
 		echo "50"; sleep 1
-		echo "70"; sleep 1
-		echo "90";
 		systemctl start ssh
+		echo "90";
 	) |
 	(
 		zenity --progress \
@@ -108,17 +115,15 @@ modify_ssh_port()
 #User port selection to use as the real SSH port (the fake SSH port will be the normal one: 22
 {
 	NEW_PORT=$(zenity --scale --width=300 --title="New SSH port" --text="Please select the new port where the real SSH service will be listening" --min-value=1000 --max-value=65535 --value=1000 --step=1)
+	check_error 'SSH Port selection'
 	#Modify sshd_config file to change default ssh port 22, to user selected port.
 	sed -i 's/#Port/Port/g' /etc/ssh/sshd_config
 	sed -i "s/Port.*/Port $NEW_PORT/g" /etc/ssh/sshd_config
 	#Restart SSH service to apply port change
 	service ssh restart
 	#Show the new SSH port to the user
-	ss -tlpn | grep ssh | (zenity --text-info --title="SSH port confirmation" --width 1000
-		if [ "$?" -ne 0 ]
-			then modify_ssh_port
-		fi
-	)
+	ss -tlpn | grep ssh | (zenity --text-info --title="SSH port confirmation" --width 1000)
+	check_error 'SSH Port confirmation'
 }
 
 update_upgrade()
@@ -192,10 +197,11 @@ docker_install()
        		 --title="Docker installation" \
        		 --text="Installing and configuring Docker..." \
        		 --percentage=0
-		check_error 'Docker'
+		check_error 'Docker installation'
 	)
 	#Run Docker hello-world to test docker installation
 	sudo docker run hello-world | zenity 	--text-info --width=900 --height=600 --title="Testing Docker"
+	check_error 'Docker Hello-World'
 }
 
 logs_folder()
@@ -324,28 +330,28 @@ cowrie_ARM_config()
 RIOT_iot_port()
 #Get from the user, the NEW port to IoT devices environment (only one port is needed). Can't be the same for the real SSH port (also user selected previously)
 {
-	IOT_PORT=$(zenity --scale --width=300 --title="First IoT device port" --text="Please select the port where one of the IoT devices will be listening" --min-value=1000 --max-value=65535 --value=1000 --step=1
-		if [ "$IOT_PORT" = "$NEW_PORT" ]
+	IOT_PORT=$(zenity --scale --width=300 --title="First IoT device port" --text="Please select the port where one of the IoT devices will be listening" --min-value=1000 --max-value=65535 --value=1000 --step=1)
+	check_error 'IoT port selection'
+	if [ "$IOT_PORT" = "$NEW_PORT" ]
 			then
-					error_message 'Please, choose another port, that was previously chosen for SSH'; RIOT_iot_port
-		elif [ "$?" -ne 0 ]
-			then RIOT_iot_port
-		fi
-	)
+						error_message "Please, choose another port, the selected port ($IOT_PORT) was previously chosen for SS"
+						RIOT_iot_port
+			else
+						info_message "New selected port for IoT is $IOT_PORT"
 }
 
 RIOT_install()
 # Install and configure RIOT
 {
 	(
-		echo "10"; sleep 1
+		echo "30"; sleep 1
 		#if RIOT folder exists, remove it first
 		if [ -d /home/pi/iothoneypot/RIOT ]
 			then
 				#Remove RIOT folder
 				rm -Rf /home/pi/iothoneypot/RIOT
 			fi
-		echo "40"; sleep 1
+		echo "90"; sleep 1
 		#clone RIOT github
 		git clone https://github.com/RIOT-OS/RIOT.git
 	) |
@@ -507,24 +513,6 @@ installation()
 	#RIOT_docker_iot_devices
 }
 
-installation_stop()
-{
-        zenity 	--info \
-								--title="Stopped" \
-								--text="More info:  http://www.darkdefense.net" \
-								--width=300 \
-								--height=100
-}
-
-installation_finished()
-{
-        zenity 	--info \
-								--title="Finished!" \
-								--text="Now. Docker is working, SSH honeypot working. IoT honeypot working with 2 Iot Devices running. One of them has the port $IOT_PORT. Installation successfully finished." \
-								--width=300 \
-								--height=200
-}
-
 initial_warning()
 {
 	zenity 	--text-info \
@@ -539,12 +527,18 @@ initial_warning()
         		installation
 			;;
     		1)
-        		installation_stop
-			;;
-    		-1)
-        		printf "An unexpected error has occurred.\n"
+        		check_error 'Initial considerations'
 			;;
 	esac
+}
+
+installation_finished()
+{
+        zenity 	--info \
+								--title="Finished!" \
+								--text="Now. Docker is working, SSH honeypot working. IoT honeypot working with 2 Iot Devices running. Installation successfully finished." \
+								--width=300 \
+								--height=200
 }
 
 #First, check if the script was run as sudo, and if platform is 64 bit. If not, exit.
