@@ -68,6 +68,7 @@ check_error()
 
 activate_ssh()
 #Raspberry Pi port 22 activation
+{
 	(
 		echo "20"; sleep 1
 		#Enable SSH. By default is closed in Rapsberry Pi.
@@ -255,11 +256,11 @@ cowrie_ARM_install()
 	#Run cowrie in the background and in a container listen in port 22, and redirected to port 2222 inside container
 	printf "Starting cowrie docker container:\n"
 	docker run 	--detach \
-							#next option is to attach the local log folder to the cowrie container. REMOVE # if local logs_folder and splunkforwarder_install are used
-							#--volume /var/log/cowrie:/cowrie/cowrie-git/shared-log \
 							--publish 22:2222/tcp \
 							jtorresheredia/cowrie-arm
-	sleep 15
+							#IF local logs_folder and splunkforwarder_install are used (to attach the local log folder to the cowrie container), then add this option between --detach and --publish.
+							#--volume /var/log/cowrie:/cowrie/cowrie-git/shared-log \
+	sleep 10
 }
 
 cowrie_ARM_config()
