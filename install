@@ -66,6 +66,14 @@ check_error()
 	fi
 }
 
+error_message()
+{
+	zenity 	--error \
+					--width=300 \
+					--height=50 \
+					--text="$message"
+}
+
 activate_ssh()
 #Raspberry Pi port 22 activation
 {
@@ -107,7 +115,7 @@ modify_ssh_port()
 	service ssh restart
 	#Show the new SSH port to the user
 	ss -tlpn | grep ssh | (zenity --text-info --title="SSH port confirmation" --width 1000
-		if [ "$?" = 1 ]
+		if [ "$?" -ne 0 ]
 			then modify_ssh_port
 		fi
 	)
@@ -317,9 +325,10 @@ RIOT_iot_port()
 #Get from the user, the NEW port to IoT devices environment (only one port is needed). Can't be the same for the real SSH port (also user selected previously)
 {
 	IOT_PORT=$(zenity --scale --width=300 --title="First IoT device port" --text="Please select the port where one of the IoT devices will be listening" --min-value=1000 --max-value=65535 --value=1000 --step=1
-		if [ $IOT_PORT = $NEW_PORT]
-			then RIOT_iot_port
-		elif [ "$?" = 1 ]
+		if [ $IOT_PORT = $NEW_PORT ]
+			then
+					error_message 'Please, choose another port, that was previously chosen for SSH'; RIOT_iot_port
+		elif [ "$?" -ne 0 ]
 			then RIOT_iot_port
 		fi
 	)
@@ -386,6 +395,11 @@ RIOT_iot_devices()
 	(
 		echo "10"; sleep 1
 		#copy IoT folder (GitHub) to RIOT
+		if [ -d /home/pi/iothoneypot/RIOT/IoT_Honeypot ]
+			then
+				#Remove RIOT folder
+				rm -Rf /home/pi/iothoneypot/RIOT/IoT_Honeypot
+			fi
 		cp -R /home/pi/iothoneypot/IoT_Honeypot /home/pi/iothoneypot/RIOT/IoT_Honeypot
 		echo "20"; sleep 1
 		#compile IoT devices using the copied folder (with custom main.c)
@@ -562,9 +576,9 @@ printf "tap0 activates an interface of one virtual IoT device. The same with tap
 printf "Once executed tap0 or tap1 or both, you will enter into the OS of the virtual IoT device.\n"
 printf "Once inside, type info (info about the device), or help for more Commands\n"
 printf "more info in the file: /home/pi/iothoneypot/RIOT/IoT_Honeypot/README.md\n"
-printf "------------------------------------------------------------------------------------------\n"
+printf "==========================================================================================\n"
 printf "To enter the above commands (tap0 or tap1), open a NEW terminal (Won't work in this one).\n"
-printf "------------------------------------------------------------------------------------------\n"
+printf "==========================================================================================\n"
 printf "******************************************************************************************\n"
 printf "\n"
 exit
