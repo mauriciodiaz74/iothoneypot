@@ -232,7 +232,7 @@ cowrie_ARM_install()
 		#Run cowrie in the background and in a container listen in port 22, and redirected to port 2222 inside container
 		echo "Starting cowrie docker container:"
 		docker run 	--detach \
-		 					 	--volume /var/log/cowrie:/cowrie/cowrie-git/var/log/shared-log \
+		 					 	--volume /var/log/cowrie:/cowrie/cowrie-git/shared-log \
 								--publish 22:2222/tcp \
 								jtorresheredia/cowrie-arm
 		#echo "Docker run:";	docker run -d -v /var/log/cowrie:/cowrie/cowrie-git/var/log/cowrie -p 22:2222/tcp jtorresheredia/cowrie-arm
@@ -258,8 +258,6 @@ cowrie_ARM_config()
 		echo "Executing command inside container"; docker exec $containerid sed -i 's/root:x:!\/honeypot.*/root:x:!admin/' etc/userdb.txt
 		echo "Executing command inside container"; docker exec $containerid sed -i 's/root:x:\*.*/root:x:toor/		' etc/userdb.txt
 		#Edit cowrie config file.
-		#Change the default log to the shared log previously created and activated inside the container
-		echo "Executing command inside container"; docker exec $containerid sed -i 's/log_path.*/log_path = var\/log\/shared-log/' etc/cowrie.cfg
 		#...to enable TELNET honeypot, port 23, uncomment the next line:
 		#sed -i '/# Enable Telnet support, disabled by default/{n;s/enable.*/enabled = true/}' etc/cowrie.cfg
 		#...to enable SPLUNK forwarding in output_splunk section:
@@ -356,8 +354,8 @@ RIOT_iot_devices()
 		#ADD aliases to Bashrc to fast execution of tap devices (IoT devices):
 		#Backup .Bashrc
 		cp /home/pi/.bashrc /home/pi/.bashrc.bak
-		echo "alias tap0='/home/pi/iothoneypot/RIOT/IoT_Honeypot/bin/native/./IoT_Honeypot.elf tap0'" >> .bashrc
-		echo "alias tap1='/home/pi/iothoneypot/RIOT/IoT_Honeypot/bin/native/./IoT_Honeypot.elf tap1'" >> .bashrc
+		printf "alias tap0='/home/pi/iothoneypot/RIOT/IoT_Honeypot/bin/native/./IoT_Honeypot.elf tap0'" >> .bashrc
+		printf "alias tap1='/home/pi/iothoneypot/RIOT/IoT_Honeypot/bin/native/./IoT_Honeypot.elf tap1'" >> .bashrc
 		echo "90";
 	) |
 	(
