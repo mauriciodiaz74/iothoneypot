@@ -1,6 +1,5 @@
 #!/bin/bash
 
-#19-05-20_17:48
 #Variables
 FILE=`dirname $0`/CONSIDERATIONS.txt
 MACHINE_TYPE=`uname -m`
@@ -16,8 +15,8 @@ H=$(( $SCREEN_HEIGHT - 2 * $TOP_MARGIN ))
 clear
 
 logging()
+#Log all installation commands output
 {
-	#Log all commands output
 	logging=/var/log/iothoneypot_install.log
 	mkfifo ${logging}.pipe
 	tee < ${logging}.pipe $logging &
@@ -26,35 +25,36 @@ logging()
 }
 
 check_sudo()
+#Check if the script was started by a sudo user. If not EXIT.
 {
-	#Check if the script was started by a sudo user. If not EXIT.
 	if (( $EUID != 0 ))
 		then
-			echo
-			echo "WARNING:"
-			echo "To use this script, you need to run it as sudo"
-			echo "Please use: <sudo ./install>"
-			echo
-		exit
+			printf "\n"
+			printf "WARNING:\n"
+			printf "To use this script, you need to run it as sudo\n"
+			printf "Please use: <sudo ./install>\n"
+			printf "\n"
+			exit
 	fi
 }
 
 check_platform()
+#Check if the platform is supported. If not EXIT.
 {
-	#Check if the platform is supported. If not EXIT.
 	if [ ${MACHINE_TYPE} != 'armv7l' ]
 		then
-			echo
-			echo "WARNING:"
-			echo "This program do not support this plattform"
-			echo "Visit http://www.darkdefense.net/own/iothoneypot/supported"
-			echo "Sorry..."
-			echo
+			printf "\n"
+			printf "WARNING:\n"
+			printf "This program do not support this plattform\n"
+			printf "Visit http://www.darkdefense.net/own/iothoneypot/supported\n"
+			printf "Sorry...\n"
+			printf "\n"
 		exit
 	fi
 }
 
 check_error()
+#Exit the program if there is an error
 {
 	if [ "$?" -ne 0 ]
 		then
@@ -67,7 +67,7 @@ check_error()
 }
 
 activate_ssh()
-{
+#Raspberry Pi port 22 activation
 	(
 		echo "20"; sleep 1
 		#Enable SSH. By default is closed in Rapsberry Pi.
@@ -88,7 +88,15 @@ activate_ssh()
 	)
 }
 
+activate_telnet()
+#To enable Telnet port - not recommended -
+{
+	sudo apt-get -y install telnetd
+	sudo /etc/init.d/openbsd-inetd restart
+}
+
 modify_ssh_port()
+#User port selection to use as the real SSH port (the fake SSH port will be the normal one: 22
 {
 	NEW_PORT=$(zenity --scale --width=300 --title="New SSH port" --text="Please select the new port where the real SSH service will be listening" --min-value=1000 --max-value=65535 --value=1000 --step=1)
 	#Modify sshd_config file to change default ssh port 22, to user selected port.
@@ -96,7 +104,7 @@ modify_ssh_port()
 	sed -i "s/Port.*/Port $NEW_PORT/g" /etc/ssh/sshd_config
 	#Restart SSH service to apply port change
 	service ssh restart
-	#Show the new SSH port
+	#Show the new SSH port to the user
 	ss -tlpn | grep ssh | (zenity --text-info --title="SSH port confirmation" --width 1000
 		if [ "$?" = 1 ]
 			then modify_ssh_port
@@ -105,9 +113,10 @@ modify_ssh_port()
 }
 
 update_upgrade()
+#Update raspbian repositories and upgrade the system if necessary
 {
 	(
-		echo "50"; sleep 1
+		echo "10"; sleep 1
 		#Update system repositories
 		sudo apt-get update
 		echo "30"; sleep 1
@@ -128,24 +137,25 @@ update_upgrade()
 }
 
 removing_previous_docker()
+#Stop and remove all docker containers images and volumes, and uninstall previous docker versions
 {
-	#Stop and remove all docker containers images and volumes, and uninstall previous docker versions
-	echo "Removing previous docker installation:"
-	echo "Stopping containers"; docker container stop $(sudo docker container ls -aq)
-	echo "Removing containers"; docker container prune --force; sleep 5
-	echo "Removing images"; docker image prune --all --force; sleep 5
-	echo "Removing docker system"; docker system prune --all --force --volumes; sleep 5
-	echo "Uninstaling docker"; apt-get purge -y docker-engine docker docker.io docker-ce docker-ce-cli containerd runc
+	printf "Removing previous docker installation:\n"
+	printf "Stopping containers\n"; docker container stop $(sudo docker container ls -aq)
+	printf "Removing containers\n"; docker container prune --force; sleep 5
+	printf "Removing images\n"; docker image prune --all --force; sleep 5
+	printf "Removing docker system\n"; docker system prune --all --force --volumes; sleep 5
+	printf "Uninstaling docker\n"; apt-get purge -y docker-engine docker docker.io docker-ce docker-ce-cli containerd runc
 	sleep 5
-	echo "Cleaning cache"; apt-get autoremove -y --purge docker-engine docker docker.io docker-ce
+	printf "Cleaning cache\n"; apt-get autoremove -y --purge docker-engine docker docker.io docker-ce
 	sleep 5
-	echo "Removing associated files"; rm -Rf /var/lib/docker /etc/docker
-	echo "Removing associated files"; rm -Rf /etc/apparmor.d/docker
-	echo "Removing associated files"; rm -Rf /var/run/docker.sock
-	echo "Removing docker group"; groupdel docker
+	printf "Removing related files\n"; rm -Rf /var/lib/docker /etc/docker
+	printf "Removing related files\n"; rm -Rf /etc/apparmor.d/docker
+	printf "Removing related files\n"; rm -Rf /var/run/docker.sock
+	printf "Removing docker group\n"; groupdel docker
 }
 
 docker_install()
+#Docker ARM version. Full instalation, configuration and activation
 {
 	(
 		echo "10"; sleep 1
@@ -180,138 +190,185 @@ docker_install()
 	sudo docker run hello-world | zenity 	--text-info --width=900 --height=600 --title="Testing Docker"
 }
 
-cowrie_ARM_install()
-#include splunkforwarder installation and configuration to use with cowrie
+logs_folder()
+#Create log folder in Raspberry to attach it to containers in order to receive its logs
 {
-	(
-		if [ -d /var/log/cowrie ]
-			then
-				#Remove shared log folder if exist.
-				echo "Removig previous shared log folder"; rm -Rf /var/log/cowrie
-		fi
-		if [ -d /opt/splunkforwarder ]
-			then
-				#Remove splunkforwarder if exist.
-				echo "Removig previous splunkforwarder folder"; rm -Rf /opt/splunkforwarder
-		fi
-		if [ -f /opt/splunkforwarder-8.0.3-a6754d8441bf-Linux-arm.tgz ]
-			then
-				#Remove splunkforwarder compressed file
-				echo "Removing previous splunkforwarder compressed file"; rm /opt/splunkforwarder-8.0.3-a6754d8441bf-Linux-arm.tgz
-		fi
-		if [ -f /opt/user-seed.conf ]
-			then
-				#Remove user-seed.conf
-				echo "Removing previous user-seed file"; rm /opt/user-seed.conf
-		fi
-		#create shared log and change permissiones to it, to could use it insider container
-		mkdir /var/log/cowrie
-		chown pi:pi -R /var/log/cowrie
-		#download pre-cowrie_requirements
-		echo "Downloading splunk forwarder ARM version to use it with cowrie"; wget -O /opt/splunkforwarder-8.0.3-a6754d8441bf-Linux-arm.tgz http://www.darkdefense.net/own/iotsplunk/splunkforwarder-8.0.3-a6754d8441bf-Linux-arm.tgz
-		echo "Unzipping splunk forwarder ARM version"; tar -xvzf /opt/splunkforwarder-8.0.3-a6754d8441bf-Linux-arm.tgz -C /opt
-		echo "Downloading splunk forwarder config file"; wget -O /opt/user-seed.conf http://www.darkdefense.net/own/iotsplunk/user-seed.conf
-		#echo "Downloading splunk forwarder config file"; wget -O /opt/user-seed.conf http://www.darkdefense.net/own/iotsplunk/outputs.conf
-		#Install splunkforwarder
-		/opt/splunkforwarder/bin/./splunk start --accept-license --answer-yes --no-prompt
-		Sleep 3
-		/opt/splunkforwarder/bin/./splunk stop
-		Sleep 1
-		#Provide credentials and server configuration
-		echo "Copying new user-seed"; cp /opt/user-seed.conf /opt/splunkforwarder/etc/system/local/
-		#rm /opt/splunkforwarder/etc/apps/SplunkUniversalForwarder/default/outputs.conf
-		#cp /opt/outputs.conf /opt/splunkforwarder/etc/apps/SplunkUniversalForwarder/default
-		echo "Configuring outputs in splunkforwarder"
-		echo '[tcpout:my_indexers]' | sudo tee -a /opt/splunkforwarder/etc/apps/SplunkUniversalForwarder/default/outputs.conf
-		echo 'server=34.243.135.52:9997' | sudo tee -a /opt/splunkforwarder/etc/apps/SplunkUniversalForwarder/default/outputs.conf
-		/opt/splunkforwarder/bin/./splunk start
-		#confirm installation
-		echo "Splunk forwarder status:"; /opt/splunkforwarder/bin/./splunk status | grep check
-		#Download cowrie ARM version (jheredia cowrie docker)
-		echo "Downloading Cowrie docker ARM version"; docker pull jtorresheredia/cowrie-arm
-		#Run cowrie in the background and in a container listen in port 22, and redirected to port 2222 inside container
-		echo "Starting cowrie docker container:"
-		docker run 	--detach \
-		 					 	--volume /var/log/cowrie:/cowrie/cowrie-git/shared-log \
-								--publish 22:2222/tcp \
-								jtorresheredia/cowrie-arm
-		#echo "Docker run:";	docker run -d -v /var/log/cowrie:/cowrie/cowrie-git/var/log/cowrie -p 22:2222/tcp jtorresheredia/cowrie-arm
-		sleep 15
-	)
+	if [ -d /var/log/iothoneypots ]
+		then
+			#Remove shared log folder if exist.
+			printf "Removig previous shared log folder\n"; rm -Rf /var/log/iothoneypots
+	fi
+	#create shared log and change permissiones to it, to could use it insider container
+	mkdir /var/log/iothoneypots
+	#Files/Folders should be "not root" in order to use inside containers (also not root in the cowrie docker)
+	chown pi:pi -R /var/log/iothoneypots
+}
+
+splunkforwarder_install()
+#splunkforwarder installation and configuration to send logs to Splunk server
+{
+	if [ -d /opt/splunkforwarder ]
+		then
+			#Remove splunkforwarder if exist.
+			printf "Removig previous splunkforwarder folder\n"; rm -Rf /opt/splunkforwarder
+	fi
+	if [ -f /opt/splunkforwarder-8.0.3-a6754d8441bf-Linux-arm.tgz ]
+		then
+			#Remove splunkforwarder compressed file
+			printf "Removing previous splunkforwarder compressed file\n"; rm /opt/splunkforwarder-8.0.3-a6754d8441bf-Linux-arm.tgz
+	fi
+	if [ -f /opt/user-seed.conf ]
+		then
+			#Remove user-seed.conf
+			printf "Removing previous user-seed file\n"; rm /opt/user-seed.conf
+	fi
+	#Download necessary files
+	printf "Downloading splunk forwarder ARM version to use it with cowrie\n"; wget -O /opt/splunkforwarder-8.0.3-a6754d8441bf-Linux-arm.tgz http://www.darkdefense.net/own/iotsplunk/splunkforwarder-8.0.3-a6754d8441bf-Linux-arm.tgz
+	printf "Unzipping splunk forwarder ARM version\n"; tar -xvzf /opt/splunkforwarder-8.0.3-a6754d8441bf-Linux-arm.tgz -C /opt
+	printf "Downloading splunk forwarder config file\n"; wget -O /opt/user-seed.conf http://www.darkdefense.net/own/iotsplunk/user-seed.conf
+	#Install splunkforwarder
+	/opt/splunkforwarder/bin/./splunk start --accept-license --answer-yes --no-prompt
+	sleep 3
+	/opt/splunkforwarder/bin/./splunk stop
+	sleep 3
+	#Provide credentials and server configuration
+	printf "Copying new user-seed\n"; cp /opt/user-seed.conf /opt/splunkforwarder/etc/system/local/
+	#Configure Splunk server data to the splunkforwarder
+	printf "Configuring outputs in splunkforwarder:\n"
+	printf '[tcpout:my_indexers]' | sudo tee -a /opt/splunkforwarder/etc/apps/SplunkUniversalForwarder/default/outputs.conf
+	printf 'server=34.243.135.52:9997' | sudo tee -a /opt/splunkforwarder/etc/apps/SplunkUniversalForwarder/default/outputs.conf
+	/opt/splunkforwarder/bin/./splunk start
+	#confirm installation
+	printf "Splunk forwarder status:\n"; /opt/splunkforwarder/bin/./splunk status | grep check
+	sleep 3
+}
+
+cowrie_ARM_install()
+#Cowrie Docker - ARM version installation
+{
+	#To use splunkforwarder to send data to Splunk server, remove # in the next 2 lines and in the option --volume in the docker run command (to attach the log folder to the container).
+	#logs_folder  #Create logs folder to containers.
+	#splunkforwarder_install #Install splunkforwarder using the previous created logs folder
+	#
+	#Download cowrie ARM version (jheredia cowrie docker)
+	printf "Downloading Cowrie docker ARM version\n"; docker pull jtorresheredia/cowrie-arm
+	#Run cowrie in the background and in a container listen in port 22, and redirected to port 2222 inside container
+	printf "Starting cowrie docker container:\n"
+	docker run 	--detach \
+							#next option is to attach the local log folder to the cowrie container. REMOVE # if local logs_folder and splunkforwarder_install are used
+							#--volume /var/log/cowrie:/cowrie/cowrie-git/shared-log \
+							--publish 22:2222/tcp \
+							jtorresheredia/cowrie-arm
+	sleep 15
 }
 
 cowrie_ARM_config()
+#Configuration of cowrie Docker ARM version
 {
-	(
-		#Install adn enable telnet
-		##sudo apt-get -y install telnetd
-		##sudo /etc/init.d/openbsd-inetd restart
-		#Get the container ID from cowrie instance
-		echo "Getting container ID."; containerid=$(docker ps | sed -n '2 p' | sed 's/^\(............\).*/\1/;q')
-		echo "Container ID is: $containerid"
-		sleep 5
-		#Connect to a bash session inside co-it wrie docker instance, and execute commands inside it
-		# Backup cowrie.cfg.dist to cowrie.cfg. The latter takes precedence over the other. Rename userdb to .txt for ssh honeypot access user/passwords.
-		echo "Executing command inside container"; docker exec $containerid cp etc/cowrie.cfg.dist etc/cowrie.cfg
-		echo "Executing command inside container"; docker exec $containerid mv etc/userdb.example etc/userdb.txt
-		# Edit userdb.txt and change some too much obvious passwords.
-		echo "Executing command inside container"; docker exec $containerid sed -i 's/root:x:!\/honeypot.*/root:x:!admin/' etc/userdb.txt
-		echo "Executing command inside container"; docker exec $containerid sed -i 's/root:x:\*.*/root:x:toor/		' etc/userdb.txt
-		#Edit cowrie config file.
-		#...to enable TELNET honeypot, port 23, uncomment the next line:
-		#sed -i '/# Enable Telnet support, disabled by default/{n;s/enable.*/enabled = true/}' etc/cowrie.cfg
-		#...to enable SPLUNK forwarding in output_splunk section:
-		#Line 1. Remove the # from the output_splunk line.
-		echo "Executing command inside container"; docker exec $containerid sed -i 's/#\[output_splunk\]/\[output_splunk\]/' etc/cowrie.cfg
-		#Line 2. Enable Splunk
-		echo "Executing command inside container"; docker exec $containerid sed -i '/output_splunk/{n;s/#enabled.*/enabled = true/}' etc/cowrie.cfg
-		#Line 3. Change localhost to the remote server address where Splunk is installed and running.
-		echo "Executing command inside container"; docker exec $containerid sed -i '/output_splunk/{n;n;s/#url = https:\/\/localhost:8088\/services.*$/url = https:\/\/34.243.135.52:8088\/services\/collector\/event/}' etc/cowrie.cfg
-		#Line 4. Update the Token value from the HTTP event collector in Splunk remote server.
-		echo "Executing command inside container"; docker exec $containerid sed -i '/output_splunk/{n;n;n;s/#token = 6A0EA6C6.*$/token = e34313c8-05ad-4507-b507-4442c29c0a9f/}' etc/cowrie.cfg
-		#Lines 5, 6 and 7. Remove the #
-		echo "Executing command inside container"; docker exec $containerid sed -i '/output_splunk/{n;n;n;n;s/#index.*/index = cowrie/}' etc/cowrie.cfg
-		echo "Executing command inside container"; docker exec $containerid sed -i '/output_splunk/{n;n;n;n;n;s/#sourcetype.*/sourcetype = cowrie/}' etc/cowrie.cfg
-		echo "Executing command inside container"; docker exec $containerid sed -i '/output_splunk/{n;n;n;n;n;n;s/#source.*/source = cowrie/}' etc/cowrie.cfg
-		echo "Restarting container:"; docker restart $containerid
-		sleep 15
-		echo "Getting container ID."; containerid=$(docker ps | sed -n '2 p' | sed 's/^\(............\).*/\1/;q')
-		echo "Container ID is: $containerid"
-		#Copy splunkforwarder inside container:
-		exit
-	)
+	#Get the container ID from cowrie instance
+	printf "Getting container ID.\n"; containerid=$(docker ps | sed -n '2 p' | sed 's/^\(............\).*/\1/;q')
+	printf "Container ID is: $containerid\n"
+	sleep 5
+	#
+	#Execute commands INSIDE  the container:
+	#
+	#A) Backup cowrie.cfg.dist to cowrie.cfg. The latter takes precedence over the first. Rename userdb to .txt for ssh honeypot access user/passwords.
+	printf "Backup cowrie config file\n"; docker exec $containerid cp etc/cowrie.cfg.dist etc/cowrie.cfg
+	#
+	#B) Edit userdb file:
+	#User and passwords file to fake SSH remote connections (SSH honeypot).
+	printf "Using userdb user and passwords file\n"; docker exec $containerid mv etc/userdb.example etc/userdb.txt
+	#Edit userdb.txt and change some passwords. You can add more passwords to this file (directly in the file).
+	printf "Changing root password\n"; docker exec $containerid sed -i 's/root:x:!\/honeypot.*/root:x:!admin/' etc/userdb.txt
+	printf "Changing root password\n"; docker exec $containerid sed -i 's/root:x:\*.*/root:x:toor/		' etc/userdb.txt
+	#
+	#C)Edit cowrie config file:
+	#
+	#C1) To change the default log to the shared log previously created and activated inside the container, remove the # in the next line.
+	#echo "Executing command inside container"; docker exec $containerid sed -i 's/log_path.*/log_path = var\/log\/shared-log/' etc/cowrie.cfg
+	#
+	#C2) To enable TELNET honeypot (not recommended), port 23, uncomment the next two lines:
+	#activate_telnet
+	#sed -i '/# Enable Telnet support, disabled by default/{n;s/enable.*/enabled = true/}' etc/cowrie.cfg
+	#
+	#C3) Enable SPLUNK forwarding in output_splunk section (inside cowrie config file):
+	#Line 1. Remove the # from the output_splunk line.
+	printf "Modifying Cowrie conf -> splunk section\n"; docker exec $containerid sed -i 's/#\[output_splunk\]/\[output_splunk\]/' etc/cowrie.cfg
+	#Line 2. Enable Splunk
+	printf "Modifying Cowrie conf -> splunk section (enable)\n"; docker exec $containerid sed -i '/output_splunk/{n;s/#enabled.*/enabled = true/}' etc/cowrie.cfg
+	#Line 3. Change localhost to the remote server address where Splunk is installed and running.
+	printf "Modifying Cowrie conf -> splunk section (server IP)\n"; docker exec $containerid sed -i '/output_splunk/{n;n;s/#url = https:\/\/localhost:8088\/services.*$/url = https:\/\/34.243.135.52:8088\/services\/collector\/event/}' etc/cowrie.cfg
+	#Line 4. Update the Token value from the HTTP event collector in Splunk remote server.
+	printf "Modifying Cowrie conf -> splunk section (Token)\n"; docker exec $containerid sed -i '/output_splunk/{n;n;n;s/#token = 6A0EA6C6.*$/token = e34313c8-05ad-4507-b507-4442c29c0a9f/}' etc/cowrie.cfg
+	#Lines 5, 6 and 7. Remove the # in the config file
+	printf "Modifying Cowrie conf -> splunk section (index)\n"; docker exec $containerid sed -i '/output_splunk/{n;n;n;n;s/#index.*/index = cowrie/}' etc/cowrie.cfg
+	printf "Modifying Cowrie conf -> splunk section (sourcetype)\n"; docker exec $containerid sed -i '/output_splunk/{n;n;n;n;n;s/#sourcetype.*/sourcetype = cowrie/}' etc/cowrie.cfg
+	printf "Modifying Cowrie conf -> splunk section (source)\n"; docker exec $containerid sed -i '/output_splunk/{n;n;n;n;n;n;s/#source.*/source = cowrie/}' etc/cowrie.cfg
+	#
+	#D) Restart container to apply changes.
+	printf "Restarting container:\n"; docker restart $containerid
+	sleep 15
+	#D1) After container restarted, get the ID again (shouldn't have changed)
+	printf "Getting container ID.\n"; containerid=$(docker ps | sed -n '2 p' | sed 's/^\(............\).*/\1/;q')
+	printf "Container ID is: $containerid\n"
+	exit
 }
 
 RIOT_iot_port()
+#Get from the user, the NEW port to IoT devices environment (only one port is needed). Can't be the same for the real SSH port (also user selected previously)
 {
 	IOT_PORT=$(zenity --scale --width=300 --title="First IoT device port" --text="Please select the port where one of the IoT devices will be listening" --min-value=1000 --max-value=65535 --value=1000 --step=1
-		if [ "$?" = 1 ]
+		if [ $IOT_PORT = $NEW_PORT]
+			then RIOT_iot_port
+		elif [ "$?" = 1 ]
 			then RIOT_iot_port
 		fi
 	)
 }
 
 RIOT_install()
+# Install and configure RIOT
 {
 	(
 		echo "10"; sleep 1
+		#if RIOT folder exists, remove it first
 		if [ -d /home/pi/iothoneypot/RIOT ]
 			then
 				#Remove RIOT folder
 				rm -Rf /home/pi/iothoneypot/RIOT
 			fi
-		echo "20"; sleep 1
-		#Download RIOT (docker version)
-		#sudo docker pull riot/riotbuild
 		echo "40"; sleep 1
 		#clone RIOT github
 		git clone https://github.com/RIOT-OS/RIOT.git
-		echo "50"; sleep 1
-		#Start RIOT docker version. ARM toolchain is missing. If found, install and run the next line.
-		#sudo make BUILD_IN_DOCKER=1 DOCKER="sudo docker"
-		echo "90";
-		#Run RIOT in the background and in a container listen in USER selected PORT, and redirected to port 9999 inside container
-		#sudo sh -c "docker run --publish $IOT_PORT:9999/tcp riot > /var/log/riot_run.log 2>&1 &"
+	) |
+	(
+		zenity --progress \
+       		 --width=500 \
+       		 --height=100 \
+       		 --title="RIOT installation" \
+       		 --text="Installing RIOT" \
+       		 --percentage=0
+		check_error 'RIOT installation'
+	)
+}
+
+RIOT_docker_install()
+# Install and configure RIOT (docker version)
+{
+	(
+		echo "10"; sleep 1
+		#if RIOT folder exists, remove it first
+		if [ -d /home/pi/iothoneypot/RIOT ]
+			then
+				#Remove RIOT folder
+				rm -Rf /home/pi/iothoneypot/RIOT
+			fi
+			echo "50"; sleep 1
+			#Start RIOT docker version. ARM toolchain is missing. If found, install and run the next line.
+			#sudo make BUILD_IN_DOCKER=1 DOCKER="sudo docker"
+			echo "90";
+			#Run RIOT in the background and in a container listen in USER selected PORT, and redirected to port 9999 inside container
+			#sudo sh -c "docker run --publish $IOT_PORT:9999/tcp riot > /var/log/riot_run.log 2>&1 &"
 	) |
 	(
 		zenity --progress \
@@ -325,13 +382,14 @@ RIOT_install()
 }
 
 RIOT_iot_devices()
+#Installation and configuration of two virtual IoT devices
 {
 	(
 		echo "10"; sleep 1
 		#copy IoT folder (GitHub) to RIOT
 		cp -R /home/pi/iothoneypot/IoT_Honeypot /home/pi/iothoneypot/RIOT/IoT_Honeypot
 		echo "20"; sleep 1
-		#compile IoT devices
+		#compile IoT devices using the copied folder (with custom main.c)
 		make -C /home/pi/iothoneypot/RIOT/IoT_Honeypot/
 		echo "50"; sleep 1
 		#create interfaces for IoT devices
@@ -340,22 +398,57 @@ RIOT_iot_devices()
 		#visual confirmation to the user about new interfaces created
 		ifconfig | grep tap | zenity --text-info --title="IoT devices interfaces confirmation" --width 1000 --height 200
 		/home/pi/iothoneypot/RIOT/IoT_Honeypot/bin/native/./IoT_Honeypot.elf tap0 | zenity --text-info --title="IoT device 1 execution confirmation" --width 1000 --height 400 &
+		sleep 5
 		/home/pi/iothoneypot/RIOT/IoT_Honeypot/bin/native/./IoT_Honeypot.elf tap1 | zenity --text-info --title="IoT device 2 execution confirmation" --width 1000 --height 400 &
-		#Configuration for docker RIOT ->
-		#Get the container ID from RIOT instance
-		#containerid2=$(sudo docker ps | sed -n '3 p' | sed 's/^\(............\).*/\1/;q')
-		#echo "30"; sleep 1
-		#Connect to a bash session inside RIOT docker instance
-		#sudo docker exec -it $containerid2 /bin/bash
-		#echo "40"; sleep 1
-		#
-		#exit
-		#sudo docker restart $containerid2
-		#ADD aliases to Bashrc to fast execution of tap devices (IoT devices):
 		#Backup .Bashrc
 		cp /home/pi/.bashrc /home/pi/.bashrc.bak
+		#ADD aliases to Bashrc to fast execution of tap devices (IoT devices)
 		printf "alias tap0='/home/pi/iothoneypot/RIOT/IoT_Honeypot/bin/native/./IoT_Honeypot.elf tap0'" >> .bashrc
 		printf "alias tap1='/home/pi/iothoneypot/RIOT/IoT_Honeypot/bin/native/./IoT_Honeypot.elf tap1'" >> .bashrc
+		echo "90";
+	) |
+	(
+		zenity 	--progress \
+       			--width=500 \
+       			--height=100 \
+       			--title="IoT devices configuration" \
+       			--text="Installing and configuring IoT Virtual Devices" \
+       			--percentage=0
+		check_error 'IoT devices Installation'
+	)
+}
+
+RIOT_docker_iot_devices()
+#Installation and configuration of two virtual IoT devices in RIOT docker version.
+{
+	(
+		echo "10"; sleep 1
+		#Get the container ID from RIOT instance
+		printf "Getting container ID.\n"; containerid2=$(sudo docker ps | sed -n '3 p' | sed 's/^\(............\).*/\1/;q')
+		printf "Container ID is: $containerid2\n"
+		sleep 5
+		echo "30"; sleep 1
+		#
+		#Execute commands INSIDE the container:
+		#
+		#***************** IMPORTANT -> CHECK the correct RIOT FOLDERS in the next lines *********************.
+		#
+		#1) Copy IoT folder (GitHub) to RIOT instance (inside the container)
+		printf "Changing permissions to IoT folder \n"; chown pi:pi -R /home/pi/iothoneypot/IoT_Honeypot #Files/Folders should be "not root" in order to use inside containers (also not root in the cowrie docker)
+		printf "Copying files into the container\n"; docker cp /home/pi/iothoneypot/IoT_Honeypot $containerid2:/home/RIOT/IoT_Honeypot #copy local folder containing the custom made main.c inside container. IMPORTANT -> USE the correct RIOT FOLDER inside container.
+		echo "20"; sleep 1
+		#2) Compile IoT devices using the copied folder (inside container)
+		printf "Compiling custom made RIOT main.c inside container\n"; docker exec -w /home/RIOT/IoT_Honeypot $containerid2 make #IMPORTANT -> USE the correct RIOT FOLDER inside container.
+		echo "50"; sleep 1
+		#3) Create interfaces for IoT devices (inside container)
+		printf "Creating interfaces (IPv6) inside container\n"; docker exec -w /home/pi/iothoneypot/RIOT/dist/tools/tapsetup/ $containerid2 tapsetup -c #IMPORTANT -> USE the correct RIOT FOLDER inside container.
+		echo "70"; sleep 1
+		#4) ADD aliases to Bashrc to fast execution of tap devices (IoT devices), INSIDE the container:
+		#Backup .Bashrc
+		printf "Bashrc backup\n"; docker exec $containerid2 cp /home/pi/.bashrc /home/pi/.bashrc.bak #IMPORTANT -> USE the correct RIOT FOLDER inside container.
+		#Add aliasses
+		printf "Adding alias for tap0\n"; docker exec -w /home/pi/ $containerid2 printf "alias tap0='/home/pi/iothoneypot/RIOT/IoT_Honeypot/bin/native/./IoT_Honeypot.elf tap0'" >> .bashrc #IMPORTANT -> USE the correct RIOT FOLDER inside container.
+		printf "Adding alias for tap0\n"; docker exec -w /home/pi/ $containerid2 printf "alias tap1='/home/pi/iothoneypot/RIOT/IoT_Honeypot/bin/native/./IoT_Honeypot.elf tap1'" >> .bashrc #IMPORTANT -> USE the correct RIOT FOLDER inside container.
 		echo "90";
 	) |
 	(
@@ -389,20 +482,16 @@ installation()
 	#Cowrie, special configurations - Docker version
 	cowrie_ARM_config
 
-	#Install Cowrie - no Docker version
-	#cowrie_install_no_docker
-
-	#Cowrie, special configurations - no Docker version
-	#cowrie_config_no_docker
-
 	#Get port for IoT devices
 	RIOT_iot_port
 
-	#RIOT installation
+	#RIOT installation. Choose one of the next to (comment # the other one)
 	RIOT_install
+	#RIOT_docker_install
 
-	#RIOT configuration for IoT Devices
+	#RIOT configuration for IoT Devices. Choose one of the next to (comment # the other one)
 	RIOT_iot_devices
+	#RIOT_docker_iot_devices
 }
 
 installation_stop()
@@ -440,7 +529,7 @@ initial_warning()
         		installation_stop
 			;;
     		-1)
-        		echo "An unexpected error has occurred."
+        		printf "An unexpected error has occurred.\n"
 			;;
 	esac
 }
@@ -458,30 +547,25 @@ initial_warning
 #Proccess completed successfully
 installation_finished
 
-echo
-echo "******************************************************************************************"
-echo "Done!"
-echo "The Honeypots are running in the background"
-echo
-echo "Check locally if SSH port is open with: nmap 127.0.0.1"
-echo "Check locally if SSH port is accepting connections: ssh pi@127.0.0.1"
-echo "Check from other device scanning the network and trying to connect to SSH an Telnet ports."
-echo
-echo "Check if 2 IoT devices are running, with these commands:"
-echo "tap0"
-echo "tap1"
-echo "tap0 activates an interface of one virtual IoT device. The same with tap1."
-echo "Once executed tap0 or tap1 or both, you will enter into the OS of the virtual IoT device."
-echo "Once inside, type info (info about the device), or help for more Commands"
-echo "more info in the file: /home/pi/iothoneypot/RIOT/IoT_Honeypot/README.md"
-echo "------------------------------------------------------------------------------------------"
-echo "To enter the above commands (tap0 or tap1), open a NEW terminal (Won't work in this one)."
-echo "------------------------------------------------------------------------------------------"
-echo "******************************************************************************************"
+printf "\n"
+printf "******************************************************************************************\n"
+printf "Done!\n"
+printf "The Honeypots are running in the background\n"
+printf "\n"
+printf "Check locally if SSH port is open with: nmap 127.0.0.1\n"
+printf "Check locally if SSH port is accepting connections: ssh pi@127.0.0.1\n"
+printf "Check from other device scanning the network and trying to connect to SSH an Telnet ports.\n"
+printf "\n"
+printf "Check if 2 IoT devices are running, with these commands:\n"
+printf "tap0\n"
+printf "tap1\n"
+printf "tap0 activates an interface of one virtual IoT device. The same with tap1.\n"
+printf "Once executed tap0 or tap1 or both, you will enter into the OS of the virtual IoT device.\n"
+printf "Once inside, type info (info about the device), or help for more Commands\n"
+printf "more info in the file: /home/pi/iothoneypot/RIOT/IoT_Honeypot/README.md\n"
+printf "------------------------------------------------------------------------------------------\n"
+printf "To enter the above commands (tap0 or tap1), open a NEW terminal (Won't work in this one).\n"
+printf "------------------------------------------------------------------------------------------\n"
+printf "******************************************************************************************\n"
+printf "\n"
 exit
-
-#######################################################################################################
-#.... STILL PENDING...:
-# - Exit after Cancel button is pressed in any process. So far, only Cancel button in port selection...
-#...is working. If Cancel is pressed, ask again to select a port.
-# - Add IoT devices. Devices are configured and working, but assigning a port is still pending
