@@ -159,12 +159,11 @@ docker_install()
 #Docker ARM version. Full instalation, configuration and activation
 {
 	(
-		echo "10"; sleep 1
 		#Check if docker is installed
 		if [ -x "$(command -v docker)" ]
-			then
-				removing_previous_docker
-    	fi
+		then
+			removing_previous_docker
+		fi
 		echo "30"; sleep 1
 		#Download docker installer script
 		curl -fsSL https://get.docker.com -o get-docker.sh
@@ -312,7 +311,6 @@ cowrie_ARM_config()
 	#D1) After container restarted, get the ID again (shouldn't have changed)
 	printf "Getting container ID.\n"; containerid=$(docker ps | sed -n '2 p' | sed 's/^\(............\).*/\1/;q')
 	printf "Container ID is: $containerid\n"
-	exit
 }
 
 RIOT_iot_port()
