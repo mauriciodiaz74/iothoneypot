@@ -1,6 +1,6 @@
 GENERAL CONSIDERATIONS
 
-This is IoT-Honeypot is designed for Raspberry Pi (tested in Raspberry Pi 3B+ / Raspbian GNU/Linux 10 (buster). ).
+This IoT-Honeypot is designed for Raspberry Pi (tested in Raspberry Pi 3B+ / Raspbian GNU/Linux 10 (buster). ).
 
 Visit http://www.darkdefense.net/own/iothoneypot/supported, to learn about the Raspberry Pi versions supported so far.
 
@@ -11,11 +11,9 @@ This program does not support Raspberry Pi Virtual Machines, since they are only
 This installation involves changing some of the system's parameters and the installation of additional packages, thus, take in account the following:
 
 - The real SSH service, which by default is on port 22, will be moved to one that will be known only to you. You will be asked to which port you want to move this SSH service.
-- The DOCKER container (PaaS) will be installed, in order to install the Cowrie honeypot in an isolated and safe way within the Raspberry Pi Operating System.
-- Docker will also be configured as a system service, so that it automatically starts automatically if it is not terminated by explicit order. Furthermore, said service will be automatically initialized every time the operating system is restarted.
-- Through the isolated Honeypot Cowrie, the false service (honeypot) of SSH will be enabled, which will use the usual port for this service (22). It will be visible to any port scan to the raspberry Pi.
-- The RIOT microkernel operating system will be installed. Through this operating system, virtual IoT devices will be enabled, with real operation. This implies that it is possible to interact with them through various commands. Each virtual IoT device has a virtualized communication port with real hardware address, so it is possible to send messages between them.
-- One of these IoT devices (only one) will be accessible through a port that will also be visible to port scans made to the Raspberry Pi.
+- The DOCKER container will be installed, in order to support the isolation of SSH and IoT honeypots.
+- The false SSH service (SSH honeypot) using the usual port for this service (22). It will be visible to any port scan to the raspberry Pi.
+- The RIOT microkernel operating system will be installed to support the deployment of high interaction virtual IoT devices. Each virtual IoT device has a virtualized communication port with real hardware address, so it is possible to send messages between them.
 
 More info in about IoT devices operation in:
 /home/pi/iothoneypot/RIOT/IoT_Honeypot/README.md
