@@ -49,14 +49,14 @@ check_platform()
 			printf "Visit http://www.darkdefense.net/own/iothoneypot/supported\n"
 			printf "Sorry...\n"
 			printf "\n"
-		exit
+			exit
 	fi
 }
 
 check_error()
-#Exit the program if there is an error
+#Exit the program if there is an error (including cancelation button)
 {
-	if [ "$?" != 0 ]
+	if [[ $? -eq 1 ]]
 		then
        		zenity --error \
 			     			 --width=300 \
@@ -153,30 +153,30 @@ update_upgrade()
 removing_previous_docker()
 #Stop and remove all docker containers images and volumes, and uninstall previous docker versions
 {
-	printf "Removing previous docker installation:\n"
-	printf "Stopping containers\n"; docker container stop $(sudo docker container ls -aq)
-	printf "Removing containers\n"; docker container prune --force; sleep 5
-	printf "Removing images\n"; docker image prune --all --force; sleep 5
-	printf "Removing docker system\n"; docker system prune --all --force --volumes; sleep 5
-	printf "Uninstaling docker\n"; apt-get purge -y docker-engine docker docker.io docker-ce docker-ce-cli containerd runc
-	sleep 5
-	printf "Cleaning cache\n"; apt-get autoremove -y --purge docker-engine docker docker.io docker-ce
-	sleep 5
-	printf "Removing related files\n"; rm -Rf /var/lib/docker /etc/docker
-	printf "Removing related files\n"; rm -Rf /etc/apparmor.d/docker
-	printf "Removing related files\n"; rm -Rf /var/run/docker.sock
-	printf "Removing docker group\n"; groupdel docker
+	if [ -x "$(command -v docker)" ]
+			then
+				printf "Removing previous docker installation:\n"
+				printf "Stopping containers\n"; docker container stop $(sudo docker container ls -aq)
+				printf "Removing containers\n"; docker container prune --force; sleep 5
+				printf "Removing images\n"; docker image prune --all --force; sleep 5
+				printf "Removing docker system\n"; docker system prune --all --force --volumes; sleep 5
+				printf "Uninstaling docker\n"; apt-get purge -y docker-engine docker docker.io docker-ce docker-ce-cli containerd runc
+				sleep 5
+				printf "Cleaning cache\n"; apt-get autoremove -y --purge docker-engine docker docker.io docker-ce
+				sleep 5
+				printf "Removing related files\n"; rm -Rf /var/lib/docker /etc/docker
+				printf "Removing related files\n"; rm -Rf /etc/apparmor.d/docker
+				printf "Removing related files\n"; rm -Rf /var/run/docker.sock
+				printf "Removing docker group\n"; groupdel docker
+	fi
 }
 
 docker_install()
 #Docker ARM version. Full instalation, configuration and activation
 {
 	(
-		#Check if docker is installed
-		if [ -x "$(command -v docker)" ]
-				then
-							removing_previous_docker
-		fi
+		#Check if docker is installed. If installed, remove previous installation.
+		removing_previous_docker
 		echo "30"; sleep 1
 		#Download docker installer script
 		####################curl -fsSL https://get.docker.com -o get-docker.sh
@@ -333,11 +333,11 @@ RIOT_iot_port()
 	IOT_PORT=$(zenity --scale --width=300 --title="First IoT device port" --text="Please select the port where one of the IoT devices will be listening" --min-value=1000 --max-value=65535 --value=1000 --step=1)
 	check_error 'IoT port selection'
 	if [ "$IOT_PORT" = "$NEW_PORT" ]
-			then
-						error_message "Please, choose another port, the selected port ($IOT_PORT) was previously chosen for SS"
+						error_message "Please, choose another port, the selected port was previously chosen for SSH"
 						RIOT_iot_port
 			else
-						info_message "New selected port for IoT is $IOT_PORT"
+						info_message "New selected port for IoT was correctly selected"
+	fi
 }
 
 RIOT_install()
