@@ -31,7 +31,7 @@ check_sudo()
 		then
 			printf "\n"
 			printf "WARNING:\n"
-			printf "To use this script, you need to run it as sudo\n"
+			printf "To use this script, you need to run it as root\n"
 			printf "Please use: <sudo ./install>\n"
 			printf "\n"
 			exit
@@ -333,6 +333,7 @@ RIOT_iot_port()
 	IOT_PORT=$(zenity --scale --width=300 --title="First IoT device port" --text="Please select the port where one of the IoT devices will be listening" --min-value=1000 --max-value=65535 --value=1000 --step=1)
 	check_error 'IoT port selection'
 	if [ "$IOT_PORT" = "$NEW_PORT" ]
+			then
 						error_message "Please, choose another port, the selected port was previously chosen for SSH"
 						RIOT_iot_port
 			else
