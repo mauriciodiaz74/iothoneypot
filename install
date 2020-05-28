@@ -179,16 +179,16 @@ docker_install()
 		removing_previous_docker
 		echo "30"; sleep 1
 		#Download docker installer script
-		####################curl -fsSL https://get.docker.com -o get-docker.sh
+		curl -fsSL https://get.docker.com -o get-docker.sh
 		echo "50"; sleep 1
 		#Run docker installer script
-		######################sudo sh get-docker.sh
+		sudo sh get-docker.sh
 		echo "70"; sleep 1
 		#Add current user to docker group
 		sudo usermod -aG docker ${USER}
 		echo "90";
 		#Enable docker to start on boot with systemd
-		######################sudo systemctl enable docker
+		sudo systemctl enable docker
 	) |
 	(
 		zenity --progress \
@@ -200,7 +200,7 @@ docker_install()
 		check_error 'Docker installation'
 	)
 	#Run Docker hello-world to test docker installation
-	###################sudo docker run hello-world | zenity 	--text-info --width=900 --height=600 --title="Testing Docker"
+	sudo docker run hello-world | zenity 	--text-info --width=900 --height=600 --title="Testing Docker"
 	check_error 'Docker Hello-World'
 }
 
@@ -353,7 +353,7 @@ RIOT_install()
 			fi
 		echo "90"; sleep 1
 		#clone RIOT github
-		######git clone https://github.com/RIOT-OS/RIOT.git
+		git clone https://github.com/RIOT-OS/RIOT.git
 	) |
 	(
 		zenity --progress \
@@ -496,16 +496,16 @@ installation()
 	modify_ssh_port
 
 	#Update and upgrade function
-	#####update_upgrade
+	update_upgrade
 
 	#Install and configure Docker
 	docker_install
 
 	#Install Cowrie - Docker version
-	#####cowrie_ARM_install
+	cowrie_ARM_install
 
 	#Cowrie, special configurations - Docker version
-	#####cowrie_ARM_config
+	cowrie_ARM_config
 
 	#Get port for IoT devices
 	RIOT_iot_port
@@ -548,11 +548,11 @@ installation_finished()
 }
 
 #First, check if the script was run as sudo, and if platform is 64 bit. If not, exit.
-######check_sudo
-######check_platform
+check_sudo
+check_platform
 
-#####Installation LOG
-#####logging
+#Installation LOG
+logging
 
 #Show the initial warning with general info and considerations of using the script
 initial_warning
