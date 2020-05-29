@@ -330,6 +330,7 @@ cowrie_ARM_config()
 	#add job to collect json file
 	(crontab -u pi -l ; echo "* * * * * ( sleep 10 ; sudo docker cp 84c6:/cowrie/cowrie-git/var/log/cowrie/cowrie.json /var/log/iothoneypots)") | crontab -u pi -
 	printf "Cronjob is:"; crontab -l
+	sleep 3
 }
 
 RIOT_iot_port()
