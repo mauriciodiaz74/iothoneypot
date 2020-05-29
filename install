@@ -263,9 +263,9 @@ splunkforwarder_install()
 cowrie_ARM_install()
 #Cowrie Docker - ARM version installation
 {
-	#To use local splunkforwarder to send data to Splunk server using remove # in the next 2 lines and in the option --volume in the docker run command (to attach the log folder to the container).
-	#logs_folder  #Create logs folder to containers.
-	#splunkforwarder_install #Install splunkforwarder using the previous created logs folder
+	#To use local splunkforwarder to send data to Splunk server using local splunkforwarder, remove # in the next 2 lines.
+	logs_folder  #Create logs folder to receive data from container.
+	splunkforwarder_install #Install splunkforwarder using the previous created logs folder
 	#
 	#Download cowrie ARM version (jheredia cowrie docker)
 	printf "Downloading Cowrie docker ARM version\n"; docker pull jtorresheredia/cowrie-arm
@@ -274,8 +274,6 @@ cowrie_ARM_install()
 	docker run 	--detach \
 							--publish 22:2222/tcp \
 							jtorresheredia/cowrie-arm
-							#IF local logs_folder and splunkforwarder_install are used (to attach the local log folder to the cowrie container), then add this option between --detach and --publish.
-							#--volume /var/log/cowrie:/cowrie/cowrie-git/shared-log \
 	sleep 10
 }
 
