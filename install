@@ -241,6 +241,7 @@ splunkforwarder_install()
 	printf "Unzipping splunk forwarder ARM version\n"; tar -xvzf /opt/splunkforwarder-8.0.3-a6754d8441bf-Linux-arm.tgz -C /opt
 	printf "Downloading splunk forwarder credentials file\n"; wget -O /opt/user-seed.conf http://www.darkdefense.net/own/iotsplunk/user-seed.conf
 	printf "Downloading splunk forwarder inputs file\n"; wget -O /opt/inputs.conf http://www.darkdefense.net/own/iotsplunk/inputs.conf
+	printf "Downloading splunk forwarder outputs file\n"; wget -O /opt/outputs.conf http://www.darkdefense.net/own/iotsplunk/outputs.conf
 	#Install splunkforwarder
 	/opt/splunkforwarder/bin/./splunk start --accept-license --answer-yes --no-prompt
 	sleep 3
@@ -251,12 +252,11 @@ splunkforwarder_install()
 	#Configure inputs (json file) to send data to the splunkforwarder
 	printf "Copying new inputs.conf\n"; cp /opt/inputs.conf /opt/splunkforwarder/etc/system/local/
 	#Configure Splunk server data to the splunkforwarder
-	printf "Configuring outputs in splunkforwarder:\n"
-	printf '[tcpout:my_indexers]' | sudo tee -a /opt/splunkforwarder/etc/apps/SplunkUniversalForwarder/default/outputs.conf
-	printf 'server=34.89.20.96:9997' | sudo tee -a /opt/splunkforwarder/etc/apps/SplunkUniversalForwarder/default/outputs.conf
+	printf "Configuring outputs in splunkforwarder:\n"; cp /opt/outputs.conf /opt/splunkforwarder/etc/system/local/
+	sleep 1
 	/opt/splunkforwarder/bin/./splunk start
 	#confirm installation
-	printf "Splunk forwarder status:\n"; /opt/splunkforwarder/bin/./splunk status | grep check
+	printf "Splunk forwarder status:\n"; /opt/splunkforwarder/bin/./splunk status
 	sleep 3
 }
 
@@ -328,7 +328,7 @@ cowrie_ARM_config()
 	printf "Container ID is: $containerid\n"
 	sleep 5
 	#add job to collect json file
-	(crontab -u pi -l ; echo "* * * * * ( sleep 10 ; sudo docker cp 84c6:/cowrie/cowrie-git/var/log/cowrie/cowrie.json /var/log/iothoneypots)") | crontab -u pi -
+	(crontab -u pi -l ; echo "* * * * * ( sleep 10 ; sudo docker cp $containerid:/cowrie/cowrie-git/var/log/cowrie/cowrie.json /var/log/iothoneypots)") | crontab -u pi -
 	printf "Cronjob is:"; crontab -l
 	sleep 3
 }
