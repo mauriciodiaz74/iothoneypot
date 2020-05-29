@@ -239,7 +239,8 @@ splunkforwarder_install()
 	#Download necessary files
 	printf "Downloading splunk forwarder ARM version to use it with cowrie\n"; wget -O /opt/splunkforwarder-8.0.3-a6754d8441bf-Linux-arm.tgz http://www.darkdefense.net/own/iotsplunk/splunkforwarder-8.0.3-a6754d8441bf-Linux-arm.tgz
 	printf "Unzipping splunk forwarder ARM version\n"; tar -xvzf /opt/splunkforwarder-8.0.3-a6754d8441bf-Linux-arm.tgz -C /opt
-	printf "Downloading splunk forwarder config file\n"; wget -O /opt/user-seed.conf http://www.darkdefense.net/own/iotsplunk/user-seed.conf
+	printf "Downloading splunk forwarder credentials file\n"; wget -O /opt/user-seed.conf http://www.darkdefense.net/own/iotsplunk/user-seed.conf
+	printf "Downloading splunk forwarder inputs file\n"; wget -O /opt/inputs.conf http://www.darkdefense.net/own/iotsplunk/inputs.conf
 	#Install splunkforwarder
 	/opt/splunkforwarder/bin/./splunk start --accept-license --answer-yes --no-prompt
 	sleep 3
@@ -247,10 +248,12 @@ splunkforwarder_install()
 	sleep 3
 	#Provide credentials and server configuration
 	printf "Copying new user-seed\n"; cp /opt/user-seed.conf /opt/splunkforwarder/etc/system/local/
+	#Configure inputs (json file) to send data to the splunkforwarder
+	printf "Copying new inputs.conf\n"; cp /opt/inputs.conf /opt/splunkforwarder/etc/system/local/
 	#Configure Splunk server data to the splunkforwarder
 	printf "Configuring outputs in splunkforwarder:\n"
 	printf '[tcpout:my_indexers]' | sudo tee -a /opt/splunkforwarder/etc/apps/SplunkUniversalForwarder/default/outputs.conf
-	printf 'server=34.243.135.52:9997' | sudo tee -a /opt/splunkforwarder/etc/apps/SplunkUniversalForwarder/default/outputs.conf
+	printf 'server=34.89.20.96:9997' | sudo tee -a /opt/splunkforwarder/etc/apps/SplunkUniversalForwarder/default/outputs.conf
 	/opt/splunkforwarder/bin/./splunk start
 	#confirm installation
 	printf "Splunk forwarder status:\n"; /opt/splunkforwarder/bin/./splunk status | grep check
@@ -260,7 +263,7 @@ splunkforwarder_install()
 cowrie_ARM_install()
 #Cowrie Docker - ARM version installation
 {
-	#To use splunkforwarder to send data to Splunk server, remove # in the next 2 lines and in the option --volume in the docker run command (to attach the log folder to the container).
+	#To use local splunkforwarder to send data to Splunk server using remove # in the next 2 lines and in the option --volume in the docker run command (to attach the log folder to the container).
 	#logs_folder  #Create logs folder to containers.
 	#splunkforwarder_install #Install splunkforwarder using the previous created logs folder
 	#
@@ -314,7 +317,7 @@ cowrie_ARM_config()
 	printf "Modifying Cowrie conf -> splunk section (server IP)\n"; docker exec $containerid sed -i '/output_splunk/{n;n;s/#url = https:\/\/localhost:8088\/services.*$/url = https:\/\/34.89.20.96:8088\/services\/collector\/event/}' etc/cowrie.cfg
 	#Line 4. Update the Token value from the HTTP event collector in Splunk remote server.
 	printf "Modifying Cowrie conf -> splunk section (Token)\n"; docker exec $containerid sed -i '/output_splunk/{n;n;n;s/#token = 6A0EA6C6.*$/token = 202f2f26-27ee-4515-8c79-da687c736067/}' etc/cowrie.cfg
-	#Lines 5, 6 and 7. Remove the # in the config file. These are optional and they depends of the Splunk Server Configuration. 
+	#Lines 5, 6 and 7. Remove the # in the config file. These are optional and they depends of the Splunk Server Configuration.
 	#printf "Modifying Cowrie conf -> splunk section (index)\n"; docker exec $containerid sed -i '/output_splunk/{n;n;n;n;s/#index.*/index = cowrie/}' etc/cowrie.cfg
 	#printf "Modifying Cowrie conf -> splunk section (sourcetype)\n"; docker exec $containerid sed -i '/output_splunk/{n;n;n;n;n;s/#sourcetype.*/sourcetype = cowrie/}' etc/cowrie.cfg
 	#printf "Modifying Cowrie conf -> splunk section (source)\n"; docker exec $containerid sed -i '/output_splunk/{n;n;n;n;n;n;s/#source.*/source = cowrie/}' etc/cowrie.cfg
@@ -325,6 +328,10 @@ cowrie_ARM_config()
 	#D1) After container restarted, get the ID again (shouldn't have changed)
 	printf "Getting container ID.\n"; containerid=$(docker ps | sed -n '2 p' | sed 's/^\(............\).*/\1/;q')
 	printf "Container ID is: $containerid\n"
+	sleep 5
+	#add job to collect json file
+	(crontab -u pi -l ; echo "* * * * * ( sleep 10 ; sudo docker cp 84c6:/cowrie/cowrie-git/var/log/cowrie/cowrie.json /var/log/iothoneypots)") | crontab -u pi -
+	printf "Cronjob is:"; crontab -l
 }
 
 RIOT_iot_port()
@@ -337,7 +344,7 @@ RIOT_iot_port()
 						error_message "Please, choose another port, the selected port was previously chosen for SSH"
 						RIOT_iot_port
 			else
-						info_message "New selected port for IoT was correctly selected"
+						info_message "New selected port for IoT was correctly applied"
 	fi
 }
 
@@ -426,8 +433,8 @@ RIOT_iot_devices()
 		#Backup .Bashrc
 		cp /home/pi/.bashrc /home/pi/.bashrc.bak
 		#ADD aliases to Bashrc to fast execution of tap devices (IoT devices)
-		echo "alias tap0='/home/pi/iothoneypot/RIOT/IoT_Honeypot/bin/native/./IoT_Honeypot.elf tap0'" | sudo tee -a .bashrc
-		echo "alias tap1='/home/pi/iothoneypot/RIOT/IoT_Honeypot/bin/native/./IoT_Honeypot.elf tap1'" | sudo tee -a .bashrc
+		echo "alias tap0='/home/pi/iothoneypot/RIOT/IoT_Honeypot/bin/native/./IoT_Honeypot.elf tap0'" | tee -a /home/pi/.bashrc
+		echo "alias tap1='/home/pi/iothoneypot/RIOT/IoT_Honeypot/bin/native/./IoT_Honeypot.elf tap1'" | tee -a /home/pi/.bashrc
 		echo "90";
 	) |
 	(
