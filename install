@@ -426,8 +426,8 @@ RIOT_iot_devices()
 		#Backup .Bashrc
 		cp /home/pi/.bashrc /home/pi/.bashrc.bak
 		#ADD aliases to Bashrc to fast execution of tap devices (IoT devices)
-		printf "alias tap0='/home/pi/iothoneypot/RIOT/IoT_Honeypot/bin/native/./IoT_Honeypot.elf tap0'" >> .bashrc
-		printf "alias tap1='/home/pi/iothoneypot/RIOT/IoT_Honeypot/bin/native/./IoT_Honeypot.elf tap1'" >> .bashrc
+		echo "alias tap0='/home/pi/iothoneypot/RIOT/IoT_Honeypot/bin/native/./IoT_Honeypot.elf tap0'" | sudo tee -a .bashrc
+		echo "alias tap1='/home/pi/iothoneypot/RIOT/IoT_Honeypot/bin/native/./IoT_Honeypot.elf tap1'" | sudo tee -a .bashrc
 		echo "90";
 	) |
 	(
