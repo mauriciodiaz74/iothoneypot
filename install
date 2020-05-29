@@ -314,10 +314,10 @@ cowrie_ARM_config()
 	printf "Modifying Cowrie conf -> splunk section (server IP)\n"; docker exec $containerid sed -i '/output_splunk/{n;n;s/#url = https:\/\/localhost:8088\/services.*$/url = https:\/\/34.89.20.96:8088\/services\/collector\/event/}' etc/cowrie.cfg
 	#Line 4. Update the Token value from the HTTP event collector in Splunk remote server.
 	printf "Modifying Cowrie conf -> splunk section (Token)\n"; docker exec $containerid sed -i '/output_splunk/{n;n;n;s/#token = 6A0EA6C6.*$/token = 202f2f26-27ee-4515-8c79-da687c736067/}' etc/cowrie.cfg
-	#Lines 5, 6 and 7. Remove the # in the config file
-	printf "Modifying Cowrie conf -> splunk section (index)\n"; docker exec $containerid sed -i '/output_splunk/{n;n;n;n;s/#index.*/index = cowrie/}' etc/cowrie.cfg
-	printf "Modifying Cowrie conf -> splunk section (sourcetype)\n"; docker exec $containerid sed -i '/output_splunk/{n;n;n;n;n;s/#sourcetype.*/sourcetype = cowrie/}' etc/cowrie.cfg
-	printf "Modifying Cowrie conf -> splunk section (source)\n"; docker exec $containerid sed -i '/output_splunk/{n;n;n;n;n;n;s/#source.*/source = cowrie/}' etc/cowrie.cfg
+	#Lines 5, 6 and 7. Remove the # in the config file. These are optional and they depends of the Splunk Server Configuration. 
+	#printf "Modifying Cowrie conf -> splunk section (index)\n"; docker exec $containerid sed -i '/output_splunk/{n;n;n;n;s/#index.*/index = cowrie/}' etc/cowrie.cfg
+	#printf "Modifying Cowrie conf -> splunk section (sourcetype)\n"; docker exec $containerid sed -i '/output_splunk/{n;n;n;n;n;s/#sourcetype.*/sourcetype = cowrie/}' etc/cowrie.cfg
+	#printf "Modifying Cowrie conf -> splunk section (source)\n"; docker exec $containerid sed -i '/output_splunk/{n;n;n;n;n;n;s/#source.*/source = cowrie/}' etc/cowrie.cfg
 	#
 	#D) Restart container to apply changes.
 	printf "Restarting container:\n"; docker restart $containerid
