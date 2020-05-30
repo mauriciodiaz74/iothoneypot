@@ -123,3 +123,76 @@ cowrie_config_virtual_env()
 		check_error 'Cowrie configuration'
 	)
 }
+
+RIOT_docker_install()
+# Install and configure RIOT (docker version)
+{
+	(
+		echo "10"; sleep 1
+		#if RIOT folder exists, remove it first
+		if [ -d /home/pi/iothoneypot/RIOT ]
+			then
+				#Remove RIOT folder
+				rm -Rf /home/pi/iothoneypot/RIOT
+			fi
+			echo "50"; sleep 1
+			#Start RIOT docker version. ARM toolchain is missing. If found, install and run the next line.
+			#sudo make BUILD_IN_DOCKER=1 DOCKER="sudo docker"
+			echo "90";
+			#Run RIOT in the background and in a container listen in USER selected PORT, and redirected to port 9999 inside container
+			#sudo sh -c "docker run --publish $IOT_PORT:9999/tcp riot > /var/log/riot_run.log 2>&1 &"
+	) |
+	(
+		zenity --progress \
+       		 --width=500 \
+       		 --height=100 \
+       		 --title="RIOT installation" \
+       		 --text="Installing RIOT" \
+       		 --percentage=0
+		check_error 'RIOT installation'
+	)
+}
+
+RIOT_docker_iot_devices()
+#Installation and configuration of two virtual IoT devices in RIOT docker version.
+{
+	(
+		echo "10"; sleep 1
+		#Get the container ID from RIOT instance
+		printf "Getting container ID.\n"; containerid2=$(sudo docker ps | sed -n '3 p' | sed 's/^\(............\).*/\1/;q')
+		printf "Container ID is: $containerid2\n"
+		sleep 5
+		echo "30"; sleep 1
+		#
+		#Execute commands INSIDE the container:
+		#
+		#***************** IMPORTANT -> CHECK the correct RIOT FOLDERS in the next lines *********************.
+		#
+		#1) Copy IoT folder (GitHub) to RIOT instance (inside the container)
+		printf "Changing permissions to IoT folder \n"; chown pi:pi -R /home/pi/iothoneypot/IoT_Honeypot #Files/Folders should be "not root" in order to use inside containers (also not root in the cowrie docker)
+		printf "Copying files into the container\n"; docker cp /home/pi/iothoneypot/IoT_Honeypot $containerid2:/home/RIOT/IoT_Honeypot #copy local folder containing the custom made main.c inside container. IMPORTANT -> USE the correct RIOT FOLDER inside container.
+		echo "20"; sleep 1
+		#2) Compile IoT devices using the copied folder (inside container)
+		printf "Compiling custom made RIOT main.c inside container\n"; docker exec -w /home/RIOT/IoT_Honeypot $containerid2 make #IMPORTANT -> USE the correct RIOT FOLDER inside container.
+		echo "50"; sleep 1
+		#3) Create interfaces for IoT devices (inside container)
+		printf "Creating interfaces (IPv6) inside container\n"; docker exec -w /home/pi/iothoneypot/RIOT/dist/tools/tapsetup/ $containerid2 tapsetup -c #IMPORTANT -> USE the correct RIOT FOLDER inside container.
+		echo "70"; sleep 1
+		#4) ADD aliases to Bashrc to fast execution of tap devices (IoT devices), INSIDE the container:
+		#Backup .Bashrc
+		printf "Bashrc backup\n"; docker exec $containerid2 cp /home/pi/.bashrc /home/pi/.bashrc.bak #IMPORTANT -> USE the correct RIOT FOLDER inside container.
+		#Add aliasses
+		printf "Adding alias for tap0\n"; docker exec -w /home/pi/ $containerid2 printf "alias tap0='/home/pi/iothoneypot/RIOT/IoT_Honeypot/bin/native/./IoT_Honeypot.elf tap0'" >> .bashrc #IMPORTANT -> USE the correct RIOT FOLDER inside container.
+		printf "Adding alias for tap0\n"; docker exec -w /home/pi/ $containerid2 printf "alias tap1='/home/pi/iothoneypot/RIOT/IoT_Honeypot/bin/native/./IoT_Honeypot.elf tap1'" >> .bashrc #IMPORTANT -> USE the correct RIOT FOLDER inside container.
+		echo "90";
+	) |
+	(
+		zenity 	--progress \
+       			--width=500 \
+       			--height=100 \
+       			--title="IoT devices configuration" \
+       			--text="Installing and configuring IoT Virtual Devices" \
+       			--percentage=0
+		check_error 'IoT devices Installation'
+	)
+}
