@@ -295,8 +295,8 @@ cowrie_ARM_config()
 	#User and passwords file to fake SSH remote connections (SSH honeypot).
 	printf "Using userdb user and passwords file\n"; docker exec $containerid mv etc/userdb.example etc/userdb.txt
 	#Edit userdb.txt and change some passwords. You can add more passwords to this file (directly in the file).
-	printf "Changing root password\n"; docker exec $containerid sed -i 's/root:x:!\/honeypot.*/root:x:!admin/' etc/userdb.txt
-	printf "Changing root password\n"; docker exec $containerid sed -i 's/root:x:\*.*/root:x:toor/		' etc/userdb.txt
+	printf "Changing root password-1\n"; docker exec $containerid sed -i 's/root:x:!\/honeypot.*/root:x:!admin/' etc/userdb.txt
+	printf "Changing root password-2\n"; docker exec $containerid sed -i 's/root:x:\*.*/root:x:toor/		' etc/userdb.txt
 	#
 	#C)Edit cowrie config file:
 	#
@@ -411,10 +411,6 @@ RIOT_iot_devices()
 		#echo "alias tap1='/home/pi/iothoneypot/RIOT/IoT_Honeypot/bin/native/./IoT_Honeypot.elf tap1'" | tee -a /home/pi/.bashrc
 		echo "90";
 		#Activate tap0 in IoT_PORT
-		while [ true ]
-			do
-				ncat -l -p $IOT_PORT -c "/home/pi/iothoneypot/RIOT/IoT_Honeypot/bin/native/./IoT_Honeypot.elf tap0" &
-			done
 	) |
 	(
 		zenity 	--progress \
@@ -425,6 +421,14 @@ RIOT_iot_devices()
        			--percentage=0
 		check_error 'IoT devices Installation'
 	)
+}
+
+activate_IoT_port
+{
+	while [ true ]
+		do
+			ncat -l -p $IOT_PORT -c "/home/pi/iothoneypot/RIOT/IoT_Honeypot/bin/native/./IoT_Honeypot.elf tap0" &
+		done
 }
 
 installation()
@@ -518,8 +522,11 @@ printf "Once executed tap0 or tap1 or both, you will enter into the OS of the vi
 printf "Once inside, type info (info about the device), or help for more Commands\n"
 printf "more info in the file: /home/pi/iothoneypot/RIOT/IoT_Honeypot/README.md\n"
 printf "==========================================================================================\n"
-printf "To enter the above commands (tap0 or tap1), open a NEW terminal (Won't work in this one).\n"
+printf "PLEASE CLOSE THIS WINDOW. The above commands (tap0 or tap1) won't work in this one (open a new one).\n"
 printf "==========================================================================================\n"
 printf "******************************************************************************************\n"
 printf "\n"
+
+	#Activation of IoT port
+	activate_IoT_port
 exit
