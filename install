@@ -107,14 +107,14 @@ activate_ssh()
 activate_telnet()
 #To enable Telnet port - not recommended -
 {
-	sudo apt-get -y install telnetd
+	sudo apt-get -y install telnetd openbsd-inetd
 	sudo /etc/init.d/openbsd-inetd restart
 }
 
 modify_ssh_port()
 #User port selection to use as the real SSH port (the fake SSH port will be the normal one: 22
 {
-	NEW_PORT=$(zenity --scale --width=300 --title="New SSH port" --text="Please select the new port where the real SSH service will be listening" --min-value=1000 --max-value=65535 --value=1000 --step=1)
+	NEW_PORT=$(zenity --scale --width=300 --title="New SSH port" --text="Please select the new port where the real SSH service will be listening" --min-value=1035 --max-value=65535 --value=1035 --step=1)
 	check_error 'SSH Port selection'
 	#Modify sshd_config file to change default ssh port 22, to user selected port.
 	sed -i 's/#Port/Port/g' /etc/ssh/sshd_config
@@ -336,7 +336,7 @@ cowrie_ARM_config()
 RIOT_iot_port()
 #Get from the user, the NEW port to IoT devices environment (only one port is needed). Can't be the same for the real SSH port (also user selected previously)
 {
-	IOT_PORT=$(zenity --scale --width=300 --title="First IoT device port" --text="Please select the port where one of the IoT devices will be listening" --min-value=1000 --max-value=65535 --value=1000 --step=1)
+	IOT_PORT=$(zenity --scale --width=300 --title="First IoT device port" --text="Please select the port where one of the IoT devices will be listening" --min-value=1035 --max-value=65535 --value=1035 --step=1)
 	check_error 'IoT port selection'
 	if [ "$IOT_PORT" = "$NEW_PORT" ]
 			then
