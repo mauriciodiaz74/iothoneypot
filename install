@@ -527,6 +527,6 @@ printf "========================================================================
 printf "******************************************************************************************\n"
 printf "\n"
 
-	#Activation of IoT port
-	activate_IoT_port
+#Activation of IoT port
+activate_IoT_port
 exit
