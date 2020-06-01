@@ -410,6 +410,11 @@ RIOT_iot_devices()
 		#echo "alias tap0='/home/pi/iothoneypot/RIOT/IoT_Honeypot/bin/native/./IoT_Honeypot.elf tap0'" | tee -a /home/pi/.bashrc
 		#echo "alias tap1='/home/pi/iothoneypot/RIOT/IoT_Honeypot/bin/native/./IoT_Honeypot.elf tap1'" | tee -a /home/pi/.bashrc
 		echo "90";
+		#Activate tap0 in IoT_PORT
+		while [ true ]
+			do
+				ncat -l -p $IOT_PORT -c "/home/pi/iothoneypot/RIOT/IoT_Honeypot/bin/native/./IoT_Honeypot.elf tap0 &"
+			done
 	) |
 	(
 		zenity 	--progress \
