@@ -255,6 +255,7 @@ splunkforwarder_install()
 	printf "Configuring outputs in splunkforwarder:\n"; cp /opt/outputs.conf /opt/splunkforwarder/etc/system/local/
 	sleep 1
 	/opt/splunkforwarder/bin/./splunk start
+	sleep 10
 	#confirm installation
 	printf "Splunk forwarder status:\n"; /opt/splunkforwarder/bin/./splunk status
 	sleep 3
@@ -378,6 +379,8 @@ RIOT_iot_devices()
 {
 	(
 		echo "10"; sleep 1
+		#install ncat (netcat nmap version)
+		apt-get install -y ncat
 		#copy IoT folder (GitHub) to RIOT
 		if [ -d /home/pi/iothoneypot/RIOT/IoT_Honeypot ]
 			then
