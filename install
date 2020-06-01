@@ -460,8 +460,6 @@ installation()
 	#RIOT configuration for IoT Devices.
 	RIOT_iot_devices
 
-	#Activation of IoT port
-	activate_IoT_port
 }
 
 initial_warning()
@@ -485,11 +483,13 @@ initial_warning()
 
 installation_finished()
 {
-        zenity 	--info \
-								--title="Finished!" \
-								--text="Now. Docker is working, SSH honeypot working. IoT honeypot working with 2 Iot Devices running. Installation successfully finished." \
-								--width=300 \
-								--height=200
+    zenity 	--info \
+						--title="Finished!" \
+						--text="Now. Docker is working, SSH honeypot working. IoT honeypot working with 2 Iot Devices running. Installation successfully finished." \
+						--width=300 \
+						--height=200
+		#Activation of IoT port
+		activate_IoT_port
 }
 
 #First, check if the script was run as sudo, and if platform is 64 bit. If not, exit.
